@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { calculateBazi } from '@/lib/bazi/engine'
+import { createBaziRecord, isGithubConfigured } from '@/lib/github-db'
 
 // 排八字并自动入库
 export async function POST(request: NextRequest) {
@@ -19,53 +19,44 @@ export async function POST(request: NextRequest) {
     const result = calculateBazi(year, month, day, hour, minute || 0, gender)
 
     // 自动入库
-    let record = null
-    if (saveToDb) {
-      const birthHourIdx = result.birthHourZhi
-        ? '子丑寅卯辰巳午未申酉戌亥'.indexOf(result.birthHourZhi)
-        : 0
-
-      record = await db.baziRecord.create({
-        data: {
-          name: name || null,
-          gender,
-          birthDate: result.birthDate,
-          birthTime: result.birthTime,
-          birthHour: birthHourIdx,
-          yearGan: result.yearPillar.gan,
-          yearZhi: result.yearPillar.zhi,
-          monthGan: result.monthPillar.gan,
-          monthZhi: result.monthPillar.zhi,
-          dayGan: result.dayPillar.gan,
-          dayZhi: result.dayPillar.zhi,
-          hourGan: result.hourPillar.gan,
-          hourZhi: result.hourPillar.zhi,
-          dayMaster: result.dayMaster,
-          forward: result.forward,
-          startAge: result.startAge,
-          startYear: result.startYear,
-          elementCounts: JSON.stringify(result.elementCounts),
-          isPublic: true,
-          source: 'user',
-          daYuns: {
-            create: result.daYun.map(dy => ({
-              index: dy.index,
-              startAge: dy.startAge,
-              endAge: dy.endAge,
-              startYear: dy.startYear,
-              endYear: dy.endYear,
-              gan: dy.gan,
-              zhi: dy.zhi,
-            })),
-          },
-        },
-        include: { daYuns: true },
+    let recordId = null
+    if (saveToDb && isGithubConfigured()) {
+      const record = await createBaziRecord({
+        name: name || null,
+        gender,
+        birthDate: result.birthDate,
+        birthTime: result.birthTime,
+        birthHour: result.birthHourZhi ? '子丑寅卯辰巳午未申酉戌亥'.indexOf(result.birthHourZhi) : 0,
+        yearGan: result.yearPillar.gan,
+        yearZhi: result.yearPillar.zhi,
+        monthGan: result.monthPillar.gan,
+        monthZhi: result.monthPillar.zhi,
+        dayGan: result.dayPillar.gan,
+        dayZhi: result.dayPillar.zhi,
+        hourGan: result.hourPillar.gan,
+        hourZhi: result.hourPillar.zhi,
+        dayMaster: result.dayMaster,
+        forward: result.forward,
+        startAge: result.startAge,
+        startYear: result.startYear,
+        elementCounts: JSON.stringify(result.elementCounts),
+        isPublic: true,
+        daYuns: result.daYun.map(dy => ({
+          index: dy.index,
+          startAge: dy.startAge,
+          endAge: dy.endAge,
+          startYear: dy.startYear,
+          endYear: dy.endYear,
+          gan: dy.gan,
+          zhi: dy.zhi,
+        })),
       })
+      recordId = record.id
     }
 
     return NextResponse.json({
       bazi: result,
-      recordId: record?.id || null,
+      recordId,
     })
   } catch (error) {
     console.error('Calculate BaZi error:', error)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { createLifeEvent, getLifeEvents, isGithubConfigured } from '@/lib/github-db'
 
 // 添加人生大事
 export async function POST(
@@ -15,28 +15,32 @@ export async function POST(
       return NextResponse.json({ error: '缺少必要参数: year, event' }, { status: 400 })
     }
 
-    // 验证八字记录存在
-    const bazi = await db.baziRecord.findUnique({ where: { id } })
-    if (!bazi) {
+    if (!isGithubConfigured()) {
+      // 没有配置 GitHub token，返回成功但不保存
+      return NextResponse.json({ 
+        lifeEvent: { id: 'temp', baziId: id, year: parseInt(year), event, category: category || 'other' } 
+      })
+    }
+
+    const record = await getBaziRecord(id)
+    if (!record) {
       return NextResponse.json({ error: '八字记录不存在' }, { status: 404 })
     }
 
-    const lifeEvent = await db.lifeEvent.create({
-      data: {
-        baziId: id,
-        year: parseInt(year),
-        age: parseInt(age) || parseInt(year) - parseInt(bazi.birthDate.split('-')[0]),
-        month: month || null,
-        day: day || null,
-        event,
-        category: category || 'other',
-        notes: notes || null,
-        daYunIndex: daYunIndex !== undefined ? parseInt(daYunIndex) : null,
-        daYunGan: daYunGan || null,
-        daYunZhi: daYunZhi || null,
-        liuNianGan: liuNianGan || null,
-        liuNianZhi: liuNianZhi || null,
-      },
+    const lifeEvent = await createLifeEvent({
+      baziId: id,
+      year: parseInt(year),
+      age: parseInt(age) || parseInt(year) - parseInt(record.birthDate.split('-')[0]),
+      month: month || null,
+      day: day || null,
+      event,
+      category: category || 'other',
+      notes: notes || null,
+      daYunIndex: daYunIndex !== undefined ? parseInt(daYunIndex) : null,
+      daYunGan: daYunGan || null,
+      daYunZhi: daYunZhi || null,
+      liuNianGan: liuNianGan || null,
+      liuNianZhi: liuNianZhi || null,
     })
 
     return NextResponse.json({ lifeEvent })
@@ -48,6 +52,8 @@ export async function POST(
   }
 }
 
+import { getBaziRecord } from '@/lib/github-db'
+
 // 获取某八字的所有事件
 export async function GET(
   request: NextRequest,
@@ -55,11 +61,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const events = await db.lifeEvent.findMany({
-      where: { baziId: id },
-      orderBy: { year: 'asc' },
-    })
-
+    if (!isGithubConfigured()) {
+      return NextResponse.json({ events: [] })
+    }
+    const events = await getLifeEvents(id)
     return NextResponse.json({ events })
   } catch (error) {
     return NextResponse.json(

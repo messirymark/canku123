@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { getBaziRecord, updateBaziRecord, deleteBaziRecord, isGithubConfigured } from '@/lib/github-db'
 
 // 获取单个八字详情
 export async function GET(
@@ -8,18 +8,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const record = await db.baziRecord.findUnique({
-      where: { id },
-      include: {
-        lifeEvents: { orderBy: { year: 'asc' } },
-        daYuns: { orderBy: { index: 'asc' } },
-      },
-    })
-
+    if (!isGithubConfigured()) {
+      return NextResponse.json({ error: '数据库未配置' }, { status: 503 })
+    }
+    const record = await getBaziRecord(id)
     if (!record) {
       return NextResponse.json({ error: '未找到记录' }, { status: 404 })
     }
-
     return NextResponse.json({ record })
   } catch (error) {
     return NextResponse.json(
@@ -37,34 +32,16 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const { adminToken, name, gender, isPublic, lifeEvents, ...updateFields } = body
+    const { adminToken, ...updateFields } = body
 
     if (adminToken !== process.env.ADMIN_TOKEN && adminToken !== 'bazi-admin-2026') {
       return NextResponse.json({ error: '无管理员权限' }, { status: 403 })
     }
 
-    const updateData: any = { isAdminEdited: true }
-    if (name !== undefined) updateData.name = name
-    if (gender !== undefined) updateData.gender = gender
-    if (isPublic !== undefined) updateData.isPublic = isPublic
-
-    // 允许更新八字字段
-    const baziFields = ['yearGan', 'yearZhi', 'monthGan', 'monthZhi', 'dayGan', 'dayZhi', 'hourGan', 'hourZhi', 'dayMaster', 'forward', 'startAge', 'startYear', 'birthDate', 'birthTime', 'birthHour', 'elementCounts']
-    for (const field of baziFields) {
-      if (body[field] !== undefined) {
-        updateData[field] = body[field]
-      }
+    const record = await updateBaziRecord(id, updateFields)
+    if (!record) {
+      return NextResponse.json({ error: '未找到记录' }, { status: 404 })
     }
-
-    const record = await db.baziRecord.update({
-      where: { id },
-      data: updateData,
-      include: {
-        lifeEvents: { orderBy: { year: 'asc' } },
-        daYuns: { orderBy: { index: 'asc' } },
-      },
-    })
-
     return NextResponse.json({ record })
   } catch (error) {
     return NextResponse.json(
@@ -88,8 +65,7 @@ export async function DELETE(
       return NextResponse.json({ error: '无管理员权限' }, { status: 403 })
     }
 
-    await db.baziRecord.delete({ where: { id } })
-
+    await deleteBaziRecord(id)
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json(

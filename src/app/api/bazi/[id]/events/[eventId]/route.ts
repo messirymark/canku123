@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { updateLifeEvent, deleteLifeEvent } from '@/lib/github-db'
 
 // 更新人生大事
 export async function PUT(
@@ -7,7 +7,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string; eventId: string }> }
 ) {
   try {
-    const { id, eventId } = await params
+    const { eventId } = await params
     const body = await request.json()
     const { event, category, notes, year, age, month, day, daYunIndex, daYunGan, daYunZhi, liuNianGan, liuNianZhi } = body
 
@@ -25,11 +25,7 @@ export async function PUT(
     if (liuNianGan !== undefined) updateData.liuNianGan = liuNianGan
     if (liuNianZhi !== undefined) updateData.liuNianZhi = liuNianZhi
 
-    const lifeEvent = await db.lifeEvent.update({
-      where: { id: eventId },
-      data: updateData,
-    })
-
+    const lifeEvent = await updateLifeEvent(eventId, updateData)
     return NextResponse.json({ lifeEvent })
   } catch (error) {
     return NextResponse.json(
@@ -46,7 +42,7 @@ export async function DELETE(
 ) {
   try {
     const { eventId } = await params
-    await db.lifeEvent.delete({ where: { id: eventId } })
+    await deleteLifeEvent(eventId)
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json(

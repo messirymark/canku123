@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { listBaziRecords, isGithubConfigured } from '@/lib/github-db'
 
 // 获取八字列表 (管理员)
 export async function GET(request: NextRequest) {
@@ -10,34 +10,15 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const adminToken = searchParams.get('adminToken') || ''
 
-    // 简单管理员验证
     if (adminToken !== process.env.ADMIN_TOKEN && adminToken !== 'bazi-admin-2026') {
       return NextResponse.json({ error: '无管理员权限' }, { status: 403 })
     }
 
-    const where: any = {}
-    if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { dayGan: { contains: search } },
-        { dayZhi: { contains: search } },
-        { birthDate: { contains: search } },
-      ]
+    if (!isGithubConfigured()) {
+      return NextResponse.json({ records: [], total: 0, page, pageSize, totalPages: 0 })
     }
 
-    const [records, total] = await Promise.all([
-      db.baziRecord.findMany({
-        where,
-        include: {
-          lifeEvents: true,
-          daYuns: { orderBy: { index: 'asc' } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      db.baziRecord.count({ where }),
-    ])
+    const { records, total } = await listBaziRecords({ page, pageSize, search })
 
     return NextResponse.json({
       records,

@@ -117,6 +117,25 @@
       "updatedAt": "2026-07-02T17:58:50.949Z"
     }
   ],
-  "lifeEvents": [],
+  "lifeEvents": [
+    {
+      "id": "mr3t7zm35uqsp9m",
+      "baziId": "mr3t681x4myk31n",
+      "year": 2026,
+      "age": 36,
+      "month": null,
+      "day": null,
+      "event": "考大学",
+      "category": "other",
+      "notes": null,
+      "daYunIndex": 3,
+      "daYunGan": "甲",
+      "daYunZhi": "申",
+      "liuNianGan": null,
+      "liuNianZhi": null,
+      "createdAt": "2026-07-02T18:00:13.323Z",
+      "updatedAt": "2026-07-02T18:00:13.323Z"
+    }
+  ],
   "adminUsers": []
 }

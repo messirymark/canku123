@@ -119,8 +119,6 @@
   body {
     @apply bg-background text-foreground;
     -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    overscroll-behavior-y: none;
   }
 }
 
@@ -134,13 +132,8 @@
 
 /* 时间线平滑滚动 */
 .timeline-scroll {
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: y proximity;
-}
-
-.timeline-item {
-  scroll-snap-align: start;
+  will-change: scroll-position;
 }
 
 /* 隐藏滚动条但保持可滚动 */
@@ -155,6 +148,11 @@
 /* 移动端输入框优化 */
 input, select, textarea {
   font-size: 16px; /* 防止 iOS 缩放 */
+}
+
+/* 全局滚动优化 */
+* {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* 八字干支字体 */

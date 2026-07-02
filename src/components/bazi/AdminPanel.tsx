@@ -31,18 +31,18 @@ export function AdminPanel() {
   const [detailOpen, setDetailOpen] = useState(false)
   const [needsInit, setNeedsInit] = useState(false)
 
-  // Check if admin exists
+  // Check if admin exists - 用 GET 请求检查，不要用 POST（会误创建管理员）
   const checkAdminStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/init', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: '__check__', password: '__check__' }),
-      })
+      const res = await fetch('/api/admin/init?username=__check__&password=__check__')
       const data = await res.json()
-      if (data.error?.includes('已存在')) {
+      if (data.error?.includes('密码错误') || data.error?.includes('用户名或密码')) {
+        // 有管理员了（只是密码不对）
+        setNeedsInit(false)
+      } else if (data.success) {
         setNeedsInit(false)
       } else {
+        // 没有管理员或数据库未配置
         setNeedsInit(true)
       }
     } catch {

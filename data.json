@@ -251,6 +251,24 @@
       "liuNianZhi": null,
       "createdAt": "2026-07-02T18:00:13.323Z",
       "updatedAt": "2026-07-02T18:00:13.323Z"
+    },
+    {
+      "id": "mr3tctoxu61nba3",
+      "baziId": "mr3tan2w88f6w2r",
+      "year": 2026,
+      "age": 45,
+      "month": null,
+      "day": null,
+      "event": "创业，升职加薪",
+      "category": "career",
+      "notes": "蒸蒸日上",
+      "daYunIndex": 4,
+      "daYunGan": "甲",
+      "daYunZhi": "午",
+      "liuNianGan": null,
+      "liuNianZhi": null,
+      "createdAt": "2026-07-02T18:03:58.929Z",
+      "updatedAt": "2026-07-02T18:03:58.929Z"
     }
   ],
   "adminUsers": [

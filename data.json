@@ -1,0 +1,391 @@
+{
+  "baziRecords": [
+    {
+      "id": "mr3t681x4myk31n",
+      "name": "张三丰",
+      "gender": "male",
+      "birthDate": "1990-05-15",
+      "birthTime": "09:20",
+      "birthHour": 5,
+      "yearGan": "庚",
+      "yearZhi": "午",
+      "monthGan": "辛",
+      "monthZhi": "巳",
+      "dayGan": "庚",
+      "dayZhi": "辰",
+      "hourGan": "辛",
+      "hourZhi": "巳",
+      "dayMaster": "庚",
+      "forward": true,
+      "startAge": 7,
+      "startYear": 1997,
+      "elementCounts": "{\"金\":4,\"木\":0,\"水\":0,\"火\":3,\"土\":1}",
+      "isPublic": true,
+      "daYuns": [
+        {
+          "index": 0,
+          "startAge": 1,
+          "endAge": 7,
+          "startYear": 1990,
+          "endYear": 1996,
+          "gan": "",
+          "zhi": ""
+        },
+        {
+          "index": 1,
+          "startAge": 8,
+          "endAge": 17,
+          "startYear": 1997,
+          "endYear": 2006,
+          "gan": "壬",
+          "zhi": "午"
+        },
+        {
+          "index": 2,
+          "startAge": 18,
+          "endAge": 27,
+          "startYear": 2007,
+          "endYear": 2016,
+          "gan": "癸",
+          "zhi": "未"
+        },
+        {
+          "index": 3,
+          "startAge": 28,
+          "endAge": 37,
+          "startYear": 2017,
+          "endYear": 2026,
+          "gan": "甲",
+          "zhi": "申"
+        },
+        {
+          "index": 4,
+          "startAge": 38,
+          "endAge": 47,
+          "startYear": 2027,
+          "endYear": 2036,
+          "gan": "乙",
+          "zhi": "酉"
+        },
+        {
+          "index": 5,
+          "startAge": 48,
+          "endAge": 57,
+          "startYear": 2037,
+          "endYear": 2046,
+          "gan": "丙",
+          "zhi": "戌"
+        },
+        {
+          "index": 6,
+          "startAge": 58,
+          "endAge": 67,
+          "startYear": 2047,
+          "endYear": 2056,
+          "gan": "丁",
+          "zhi": "亥"
+        },
+        {
+          "index": 7,
+          "startAge": 68,
+          "endAge": 77,
+          "startYear": 2057,
+          "endYear": 2066,
+          "gan": "戊",
+          "zhi": "子"
+        },
+        {
+          "index": 8,
+          "startAge": 78,
+          "endAge": 87,
+          "startYear": 2067,
+          "endYear": 2076,
+          "gan": "己",
+          "zhi": "丑"
+        },
+        {
+          "index": 9,
+          "startAge": 88,
+          "endAge": 97,
+          "startYear": 2077,
+          "endYear": 2086,
+          "gan": "庚",
+          "zhi": "寅"
+        }
+      ],
+      "createdAt": "2026-07-02T17:58:50.949Z",
+      "updatedAt": "2026-07-02T17:58:50.949Z"
+    },
+    {
+      "id": "mr3tan2w88f6w2r",
+      "name": "李荣浩",
+      "gender": "male",
+      "birthDate": "1981-10-31",
+      "birthTime": "23:20",
+      "birthHour": 0,
+      "yearGan": "辛",
+      "yearZhi": "酉",
+      "monthGan": "戊",
+      "monthZhi": "戌",
+      "dayGan": "癸",
+      "dayZhi": "未",
+      "hourGan": "壬",
+      "hourZhi": "子",
+      "dayMaster": "癸",
+      "forward": false,
+      "startAge": 7,
+      "startYear": 1989,
+      "elementCounts": "{\"金\":2,\"木\":0,\"水\":3,\"火\":0,\"土\":3}",
+      "isPublic": true,
+      "daYuns": [
+        {
+          "index": 0,
+          "startAge": 1,
+          "endAge": 8,
+          "startYear": 1981,
+          "endYear": 1988,
+          "gan": "",
+          "zhi": ""
+        },
+        {
+          "index": 1,
+          "startAge": 9,
+          "endAge": 18,
+          "startYear": 1989,
+          "endYear": 1998,
+          "gan": "丁",
+          "zhi": "酉"
+        },
+        {
+          "index": 2,
+          "startAge": 19,
+          "endAge": 28,
+          "startYear": 1999,
+          "endYear": 2008,
+          "gan": "丙",
+          "zhi": "申"
+        },
+        {
+          "index": 3,
+          "startAge": 29,
+          "endAge": 38,
+          "startYear": 2009,
+          "endYear": 2018,
+          "gan": "乙",
+          "zhi": "未"
+        },
+        {
+          "index": 4,
+          "startAge": 39,
+          "endAge": 48,
+          "startYear": 2019,
+          "endYear": 2028,
+          "gan": "甲",
+          "zhi": "午"
+        },
+        {
+          "index": 5,
+          "startAge": 49,
+          "endAge": 58,
+          "startYear": 2029,
+          "endYear": 2038,
+          "gan": "癸",
+          "zhi": "巳"
+        },
+        {
+          "index": 6,
+          "startAge": 59,
+          "endAge": 68,
+          "startYear": 2039,
+          "endYear": 2048,
+          "gan": "壬",
+          "zhi": "辰"
+        },
+        {
+          "index": 7,
+          "startAge": 69,
+          "endAge": 78,
+          "startYear": 2049,
+          "endYear": 2058,
+          "gan": "辛",
+          "zhi": "卯"
+        },
+        {
+          "index": 8,
+          "startAge": 79,
+          "endAge": 88,
+          "startYear": 2059,
+          "endYear": 2068,
+          "gan": "庚",
+          "zhi": "寅"
+        },
+        {
+          "index": 9,
+          "startAge": 89,
+          "endAge": 98,
+          "startYear": 2069,
+          "endYear": 2078,
+          "gan": "己",
+          "zhi": "丑"
+        }
+      ],
+      "createdAt": "2026-07-02T18:02:17.048Z",
+      "updatedAt": "2026-07-02T18:02:17.048Z"
+    },
+    {
+      "id": "mr3tez2k6qmqg0j",
+      "name": "房世龙",
+      "gender": "male",
+      "birthDate": "1990-08-15",
+      "birthTime": "09:00",
+      "birthHour": 5,
+      "yearGan": "庚",
+      "yearZhi": "午",
+      "monthGan": "甲",
+      "monthZhi": "申",
+      "dayGan": "壬",
+      "dayZhi": "子",
+      "hourGan": "乙",
+      "hourZhi": "巳",
+      "dayMaster": "壬",
+      "forward": true,
+      "startAge": 7,
+      "startYear": 1998,
+      "elementCounts": "{\"金\":2,\"木\":2,\"水\":2,\"火\":2,\"土\":0}",
+      "isPublic": true,
+      "daYuns": [
+        {
+          "index": 0,
+          "startAge": 1,
+          "endAge": 8,
+          "startYear": 1990,
+          "endYear": 1997,
+          "gan": "",
+          "zhi": ""
+        },
+        {
+          "index": 1,
+          "startAge": 9,
+          "endAge": 18,
+          "startYear": 1998,
+          "endYear": 2007,
+          "gan": "乙",
+          "zhi": "酉"
+        },
+        {
+          "index": 2,
+          "startAge": 19,
+          "endAge": 28,
+          "startYear": 2008,
+          "endYear": 2017,
+          "gan": "丙",
+          "zhi": "戌"
+        },
+        {
+          "index": 3,
+          "startAge": 29,
+          "endAge": 38,
+          "startYear": 2018,
+          "endYear": 2027,
+          "gan": "丁",
+          "zhi": "亥"
+        },
+        {
+          "index": 4,
+          "startAge": 39,
+          "endAge": 48,
+          "startYear": 2028,
+          "endYear": 2037,
+          "gan": "戊",
+          "zhi": "子"
+        },
+        {
+          "index": 5,
+          "startAge": 49,
+          "endAge": 58,
+          "startYear": 2038,
+          "endYear": 2047,
+          "gan": "己",
+          "zhi": "丑"
+        },
+        {
+          "index": 6,
+          "startAge": 59,
+          "endAge": 68,
+          "startYear": 2048,
+          "endYear": 2057,
+          "gan": "庚",
+          "zhi": "寅"
+        },
+        {
+          "index": 7,
+          "startAge": 69,
+          "endAge": 78,
+          "startYear": 2058,
+          "endYear": 2067,
+          "gan": "辛",
+          "zhi": "卯"
+        },
+        {
+          "index": 8,
+          "startAge": 79,
+          "endAge": 88,
+          "startYear": 2068,
+          "endYear": 2077,
+          "gan": "壬",
+          "zhi": "辰"
+        },
+        {
+          "index": 9,
+          "startAge": 89,
+          "endAge": 98,
+          "startYear": 2078,
+          "endYear": 2087,
+          "gan": "癸",
+          "zhi": "巳"
+        }
+      ],
+      "createdAt": "2026-07-02T18:05:39.212Z",
+      "updatedAt": "2026-07-02T18:05:39.212Z"
+    }
+  ],
+  "lifeEvents": [
+    {
+      "id": "mr3t7zm35uqsp9m",
+      "baziId": "mr3t681x4myk31n",
+      "year": 2026,
+      "age": 36,
+      "month": null,
+      "day": null,
+      "event": "考大学",
+      "category": "other",
+      "notes": null,
+      "daYunIndex": 3,
+      "daYunGan": "甲",
+      "daYunZhi": "申",
+      "liuNianGan": null,
+      "liuNianZhi": null,
+      "createdAt": "2026-07-02T18:00:13.323Z",
+      "updatedAt": "2026-07-02T18:00:13.323Z"
+    },
+    {
+      "id": "mr3tctoxu61nba3",
+      "baziId": "mr3tan2w88f6w2r",
+      "year": 2026,
+      "age": 45,
+      "month": null,
+      "day": null,
+      "event": "创业，升职加薪",
+      "category": "career",
+      "notes": "蒸蒸日上",
+      "daYunIndex": 4,
+      "daYunGan": "甲",
+      "daYunZhi": "午",
+      "liuNianGan": null,
+      "liuNianZhi": null,
+      "createdAt": "2026-07-02T18:03:58.929Z",
+      "updatedAt": "2026-07-02T18:03:58.929Z"
+    }
+  ],
+  "adminUsers": []
+}

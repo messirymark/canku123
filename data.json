@@ -137,5 +137,12 @@
       "updatedAt": "2026-07-02T18:00:13.323Z"
     }
   ],
-  "adminUsers": []
+  "adminUsers": [
+    {
+      "id": "mr3t8oabzr882i2",
+      "username": "__check__",
+      "passwordHash": "X19jaGVja19f",
+      "createdAt": "2026-07-02T18:00:45.299Z"
+    }
+  ]
 }

@@ -33,17 +33,24 @@ export function BaziCalculator() {
   const [year, setYear] = useState('1990')
   const [month, setMonth] = useState('5')
   const [day, setDay] = useState('15')
-  const [hourIdx, setHourIdx] = useState('5') // 巳时 09:00-11:00
+  const [hour, setHour] = useState('10')
   const [minute, setMinute] = useState('0')
   const [saveToDb, setSaveToDb] = useState(true)
   const [loading, setLoading] = useState(false)
   const [baziData, setBaziData] = useState<any>(null)
   const [recordId, setRecordId] = useState<string | null>(null)
 
+  // 根据小时和分钟算出对应时辰
+  const getCurrentShichen = () => {
+    const h = parseInt(hour) || 0
+    if (h === 23 || h < 1) return '子时'
+    const idx = Math.floor((h + 1) / 2)
+    return HOURS[idx]?.label || ''
+  }
+
   const handleCalculate = useCallback(async () => {
     setLoading(true)
     try {
-      const hourValue = HOURS.find(h => h.value === hourIdx)?.hour ?? 9
       const response = await fetch('/api/bazi/calculate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,7 +60,7 @@ export function BaziCalculator() {
           year: parseInt(year),
           month: parseInt(month),
           day: parseInt(day),
-          hour: hourValue,
+          hour: parseInt(hour),
           minute: parseInt(minute),
           saveToDb,
         }),
@@ -73,7 +80,7 @@ export function BaziCalculator() {
     } finally {
       setLoading(false)
     }
-  }, [name, gender, year, month, day, hourIdx, minute, saveToDb])
+  }, [name, gender, year, month, day, hour, minute, saveToDb])
 
   return (
     <div className="space-y-4">
@@ -125,21 +132,29 @@ export function BaziCalculator() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">出生时辰</Label>
-              <Select value={hourIdx} onValueChange={setHourIdx}>
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {HOURS.map(h => (
-                    <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="hour" className="text-xs">小时 (0-23)</Label>
+              <Input
+                id="hour"
+                type="number"
+                min="0"
+                max="23"
+                value={hour}
+                onChange={(e) => setHour(e.target.value)}
+                className="h-9"
+              />
+              <p className="text-xs text-amber-600 dark:text-amber-400">{getCurrentShichen()}</p>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="minute" className="text-xs">分钟</Label>
-              <Input id="minute" type="number" min="0" max="59" value={minute} onChange={(e) => setMinute(e.target.value)} className="h-9" />
+              <Label htmlFor="minute" className="text-xs">分钟 (0-59)</Label>
+              <Input
+                id="minute"
+                type="number"
+                min="0"
+                max="59"
+                value={minute}
+                onChange={(e) => setMinute(e.target.value)}
+                className="h-9"
+              />
             </div>
           </div>
 

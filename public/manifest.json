@@ -1,0 +1,26 @@
+{
+  "name": "八字排盘 · 命理人生",
+  "short_name": "八字排盘",
+  "description": "精准八字排盘，以节气换月令，以子时换日柱。支持大运流年、人生大事备注、相似八字查询。",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fffbeb",
+  "theme_color": "#d97706",
+  "lang": "zh-CN",
+  "categories": ["lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

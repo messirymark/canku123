@@ -1,0 +1,110 @@
+// BaZi App Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 八字记录
+model BaziRecord {
+  id          String   @id @default(cuid())
+  // 基本信息
+  name        String?  // 姓名备注（可选）
+  gender      String   // male / female
+  birthDate   String   // 出生日期 ISO 格式 (如 "1990-05-15")
+  birthTime   String   // 出生时间 "HH:mm"
+  birthHour   Int      // 出生时辰地支索引 (0-12, 0=子时, 1=丑时...)
+
+  // 四柱八字
+  yearGan     String   // 年干
+  yearZhi     String   // 年支
+  monthGan    String   // 月干
+  monthZhi    String   // 月支
+  dayGan      String   // 日干 (日主)
+  dayZhi      String   // 日支
+  hourGan     String   // 时干
+  hourZhi     String   // 时支
+
+  // 大运方向信息
+  dayMaster   String   // 日主 (同 dayGan)
+  forward     Boolean  // 大运顺排(true)/逆排(false)
+  startAge    Int      // 起运年龄
+  startYear   Int      // 起运年份
+
+  // 五行统计
+  elementCounts String  // JSON: {"金":2,"木":1,"水":3,"火":1,"土":1}
+
+  // 管理
+  isPublic    Boolean  @default(true)   // 是否公开可查询
+  isAdminEdited Boolean @default(false)  // 管理员是否编辑过
+  source      String   @default("user")  // user / admin
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  lifeEvents  LifeEvent[]
+  daYuns      DaYun[]
+
+  @@index([yearGan, yearZhi, monthGan, monthZhi, dayGan, dayZhi, hourGan, hourZhi])
+  @@index([dayGan, dayZhi])
+}
+
+// 大运
+model DaYun {
+  id          String   @id @default(cuid())
+  baziId      String
+  index       Int      // 第几步大运 (0-based)
+  startAge    Int      // 起始年龄
+  endAge      Int      // 结束年龄
+  startYear   Int      // 起始年份
+  endYear     Int      // 结束年份
+  gan         String   // 大运天干
+  zhi         String   // 大运地支
+
+  bazi        BaziRecord @relation(fields: [baziId], references: [id], onDelete: Cascade)
+
+  @@index([baziId])
+}
+
+// 人生大事
+model LifeEvent {
+  id          String   @id @default(cuid())
+  baziId      String
+  year        Int      // 发生年份
+  age         Int      // 年龄
+  month       String?  // 发生月份 (可选)
+  day         String?  // 发生日 (可选)
+
+  event       String   // 事件描述
+  category    String   // 分类: marriage/career/health/wealth/education/family/travel/other
+  notes       String?  // 详细备注
+
+  // 对应的大运和流年
+  daYunIndex  Int?     // 对应第几步大运
+  daYunGan    String?  // 大运天干
+  daYunZhi    String?  // 大运地支
+  liuNianGan  String?  // 流年天干
+  liuNianZhi  String?  // 流年地支
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bazi        BaziRecord @relation(fields: [baziId], references: [id], onDelete: Cascade)
+
+  @@index([baziId])
+  @@index([year])
+}
+
+// 管理员
+model AdminUser {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

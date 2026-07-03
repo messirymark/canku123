@@ -130,72 +130,7 @@ export function BaziChart({ bazi, recordId }: { bazi: BaziData; recordId?: strin
           <PillarColumn label="时柱" pillar={bazi.hourPillar} />
         </div>
 
-        {/* Day Master Info */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 p-3 rounded-lg bg-amber-50/50 dark:bg-zinc-800/30">
-          <div className="text-center">
-            <div className="text-xs text-muted-foreground">日主</div>
-            <div className="text-lg font-bold text-amber-900 dark:text-amber-100">
-              {bazi.dayMaster} {WUXING_EMOJI[bazi.dayMasterWuxing]}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-muted-foreground">起运</div>
-            <div className="text-lg font-bold text-amber-900 dark:text-amber-100">
-              {bazi.startAge}岁
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-muted-foreground">大运方向</div>
-            <div className="text-lg font-bold text-amber-900 dark:text-amber-100">
-              {bazi.forward ? '顺排 →' : '← 逆排'}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-muted-foreground">起运年</div>
-            <div className="text-lg font-bold text-amber-900 dark:text-amber-100">
-              {bazi.startYear}
-            </div>
-          </div>
-        </div>
-
-        {/* Five Elements Balance */}
-        <div className="mb-4">
-          <div className="text-xs font-medium text-amber-800 dark:text-amber-200 mb-2">五行分布</div>
-          <div className="flex gap-2 items-end h-20">
-            {elements.map(el => {
-              const count = bazi.elementCounts[el] || 0
-              const height = totalElements > 0 ? (count / totalElements) * 100 : 0
-              return (
-                <div key={el} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="text-xs font-medium">{count}</div>
-                  <div
-                    className={`w-full rounded-t border-2 border-b-0 ${WUXING_COLORS[el]}`}
-                    style={{ height: `${Math.max(height, 4)}%`, minHeight: '4px' }}
-                  />
-                  <div className="text-xs">
-                    {el} {WUXING_EMOJI[el]}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Special Points */}
-        <div className="grid grid-cols-3 gap-2 text-center text-xs">
-          <div className="p-2 rounded bg-amber-50/30 dark:bg-zinc-800/30">
-            <div className="text-muted-foreground">胎元</div>
-            <div className="font-medium text-amber-900 dark:text-amber-100">{bazi.taiYuan}</div>
-          </div>
-          <div className="p-2 rounded bg-amber-50/30 dark:bg-zinc-800/30">
-            <div className="text-muted-foreground">命宫</div>
-            <div className="font-medium text-amber-900 dark:text-amber-100">{bazi.mingGong}</div>
-          </div>
-          <div className="p-2 rounded bg-amber-50/30 dark:bg-zinc-800/30">
-            <div className="text-muted-foreground">身宫</div>
-            <div className="font-medium text-amber-900 dark:text-amber-100">{bazi.shenGong}</div>
-          </div>
-        </div>
+        {/* Day Master Info (hidden per user request) */}
       </CardContent>
     </Card>
   )

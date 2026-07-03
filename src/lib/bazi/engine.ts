@@ -1,4 +1,4 @@
-import { Solar } from 'lunar-typescript'
+import { Solar, Lunar } from 'lunar-typescript'
 
 // 天干
 export const TIANGAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
@@ -191,13 +191,7 @@ function countElements(result: BaziResult): Record<string, number> {
 }
 
 /**
- * 排八字
- * @param year 年
- * @param month 月
- * @param day 日
- * @param hour 时
- * @param minute 分
- * @param gender male/female
+ * 排八字 - 公历输入
  */
 export function calculateBazi(
   year: number,
@@ -208,6 +202,31 @@ export function calculateBazi(
   gender: 'male' | 'female'
 ): BaziResult {
   const solar = Solar.fromYmdHms(year, month, day, hour, minute, 0)
+  return calculateFromSolar(solar, gender)
+}
+
+/**
+ * 排八字 - 农历输入
+ * @param isLeap 是否闰月
+ */
+export function calculateBaziFromLunar(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  isLeap: boolean,
+  gender: 'male' | 'female'
+): BaziResult {
+  const lunar = Lunar.fromYmdHms(year, isLeap ? -month : month, day, hour, minute, 0)
+  const solar = lunar.getSolar()
+  return calculateFromSolar(solar, gender)
+}
+
+/**
+ * 从 Solar 对象排八字
+ */
+function calculateFromSolar(solar: Solar, gender: 'male' | 'female'): BaziResult {
   const lunar = solar.getLunar()
   const eightChar = lunar.getEightChar()
 
@@ -215,7 +234,9 @@ export function calculateBazi(
   eightChar.setSect(1)
 
   const dayGan = eightChar.getDayGan()
-  const dayZhi = eightChar.getDayZhi()
+  const year = solar.getYear()
+  const hour = solar.getHour()
+  const minute = solar.getMinute()
 
   const yearPillar = buildPillar(eightChar, 'Year', dayGan)
   const monthPillar = buildPillar(eightChar, 'Month', dayGan)
@@ -233,7 +254,6 @@ export function calculateBazi(
   // 大运
   const yun = eightChar.getYun(gender === 'male' ? 1 : 0)
   const daYunList = yun.getDaYun()
-  const birthYear = year
 
   const daYun: DaYunInfo[] = daYunList.map((dy: any, i: number) => {
     const liuNianList = dy.getLiuNian()
@@ -260,7 +280,7 @@ export function calculateBazi(
   })
 
   const result: BaziResult = {
-    birthDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+    birthDate: `${year}-${String(solar.getMonth()).padStart(2, '0')}-${String(solar.getDay()).padStart(2, '0')}`,
     birthTime: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
     gender,
     birthHourZhi: DIZHI[birthHourIdx],

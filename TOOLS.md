@@ -1,40 +1,39 @@
 # TOOLS.md - Local Notes
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+## 八字排盘项目 (canku123)
 
-## What Goes Here
+### GitHub
+- 仓库: messirymark/canku123
+- Token: 用户自己的 PAT（不要硬编码在代码里，GitHub Push Protection 会拦截）
+- 数据存储: GitHub 仓库 data.json (通过 GitHub API 读写)
 
-Things like:
+### Vercel
+- 项目: canku123
+- 域名: canku123.vercel.app
+- 环境变量: GITHUB_TOKEN (需手动在 Vercel 面板设置)
 
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
+### 关键经验
 
-## Examples
+**Vercel 不支持 SQLite 本地文件**
+- SQLite 在 Vercel serverless 函数中无法写入
+- 解决方案: 改用 GitHub 仓库的 JSON 文件作为数据库 (github-db.ts)
+- GitHub API 有请求频率限制，但个人使用够用
 
-```markdown
-### Cameras
+**GitHub Push Protection**
+- 明文 token 不能推送到仓库
+- base64 编码也可能被检测
+- 最安全方式: 环境变量注入
 
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
+**Prisma driverAdapters**
+- 需要 `previewFeatures = ["driverAdapters"]`
+- `@prisma/adapter-libsql` 的导入名是 `PrismaLibSql`（注意大小写）
 
-### SSH
+**移动端滚动优化**
+- `scroll-snap-type` 会导致滑动卡顿，慎用
+- `overscroll-behavior-y: none` 会阻止子元素弹性滚动
+- `-webkit-overflow-scrolling: touch` 全局添加可改善 iOS 滚动
 
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
-```
-
-## Why Separate?
-
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
-
----
-
-Add whatever helps you do your job. This is your cheat sheet.
+**八字计算 (lunar-typescript)**
+- `setSect(1)` = 子时换日柱（23:00后换下一日柱）
+- 节气换月令是默认行为，无需额外配置
+- `EightChar.getYun(1)` 参数: 1=男, 0=女

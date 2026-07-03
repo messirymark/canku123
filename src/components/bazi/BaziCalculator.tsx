@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { BaziChart } from './BaziChart'
 import { Timeline } from './Timeline'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const HOURS = [
   { value: '0', label: '子时 23:00-01:00', hour: 23 },
@@ -27,42 +27,47 @@ const HOURS = [
   { value: '11', label: '亥时 21:00-23:00', hour: 21 },
 ]
 
+type CalendarType = 'solar' | 'lunar'
+
 export function BaziCalculator() {
   const [name, setName] = useState('')
   const [gender, setGender] = useState<'male' | 'female'>('male')
-  const [year, setYear] = useState('1990')
-  const [month, setMonth] = useState('5')
-  const [day, setDay] = useState('15')
-  const [hour, setHour] = useState('10')
-  const [minute, setMinute] = useState('0')
+  const [calendarType, setCalendarType] = useState<CalendarType>('solar')
+  const [datetime, setDatetime] = useState('1990-05-15T10:00')
+  const [isLeap, setIsLeap] = useState(false)
   const [saveToDb, setSaveToDb] = useState(true)
   const [loading, setLoading] = useState(false)
   const [baziData, setBaziData] = useState<any>(null)
   const [recordId, setRecordId] = useState<string | null>(null)
 
-  // 根据小时和分钟算出对应时辰
-  const getCurrentShichen = () => {
-    const h = parseInt(hour) || 0
-    if (h === 23 || h < 1) return '子时'
-    const idx = Math.floor((h + 1) / 2)
-    return HOURS[idx]?.label || ''
-  }
-
   const handleCalculate = useCallback(async () => {
     setLoading(true)
     try {
+      // 解析 datetime-local: "1990-05-15T10:00"
+      const [datePart, timePart] = datetime.split('T')
+      const [year, month, day] = datePart.split('-').map(Number)
+      const [hour, minute] = (timePart || '00:00').split(':').map(Number)
+
+      if (!year || !month || !day) {
+        toast.error('请选择出生时间')
+        setLoading(false)
+        return
+      }
+
       const response = await fetch('/api/bazi/calculate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name || undefined,
           gender,
-          year: parseInt(year),
-          month: parseInt(month),
-          day: parseInt(day),
-          hour: parseInt(hour),
-          minute: parseInt(minute),
+          year,
+          month,
+          day,
+          hour,
+          minute,
           saveToDb,
+          calendarType,
+          isLeap,
         }),
       })
 
@@ -80,7 +85,7 @@ export function BaziCalculator() {
     } finally {
       setLoading(false)
     }
-  }, [name, gender, year, month, day, hour, minute, saveToDb])
+  }, [name, gender, calendarType, datetime, isLeap, saveToDb])
 
   return (
     <div className="space-y-4">
@@ -89,80 +94,127 @@ export function BaziCalculator() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base text-amber-900 dark:text-amber-100">出生信息</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-xs">姓名 (可选)</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="姓名"
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">性别</Label>
-              <Select value={gender} onValueChange={(v) => setGender(v as 'male' | 'female')}>
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">男</SelectItem>
-                  <SelectItem value="female">女</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <CardContent className="space-y-3">
+          {/* 姓名 */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">姓名</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="请输入姓名"
+              className="h-9"
+            />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="year" className="text-xs">年</Label>
-              <Input id="year" type="number" value={year} onChange={(e) => setYear(e.target.value)} className="h-9" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="month" className="text-xs">月</Label>
-              <Input id="month" type="number" min="1" max="12" value={month} onChange={(e) => setMonth(e.target.value)} className="h-9" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="day" className="text-xs">日</Label>
-              <Input id="day" type="number" min="1" max="31" value={day} onChange={(e) => setDay(e.target.value)} className="h-9" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="hour" className="text-xs">小时 (0-23)</Label>
-              <Input
-                id="hour"
-                type="number"
-                min="0"
-                max="23"
-                value={hour}
-                onChange={(e) => setHour(e.target.value)}
-                className="h-9"
-              />
-              <p className="text-xs text-amber-600 dark:text-amber-400">{getCurrentShichen()}</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="minute" className="text-xs">分钟 (0-59)</Label>
-              <Input
-                id="minute"
-                type="number"
-                min="0"
-                max="59"
-                value={minute}
-                onChange={(e) => setMinute(e.target.value)}
-                className="h-9"
-              />
-            </div>
-          </div>
-
+          {/* 性别 */}
           <div className="flex items-center justify-between">
+            <Label className="text-xs">性别</Label>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setGender('male')}
+                className={cn(
+                  'px-5 py-1 rounded-md text-sm transition-colors',
+                  gender === 'male'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-muted text-muted-foreground'
+                )}
+              >
+                男
+              </button>
+              <button
+                onClick={() => setGender('female')}
+                className={cn(
+                  'px-5 py-1 rounded-md text-sm transition-colors',
+                  gender === 'female'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-muted text-muted-foreground'
+                )}
+              >
+                女
+              </button>
+            </div>
+          </div>
+
+          {/* 历法 */}
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">历法</Label>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setCalendarType('solar')}
+                className={cn(
+                  'px-4 py-1 rounded-md text-sm transition-colors',
+                  calendarType === 'solar'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-muted text-muted-foreground'
+                )}
+              >
+                公历
+              </button>
+              <button
+                onClick={() => setCalendarType('lunar')}
+                className={cn(
+                  'px-4 py-1 rounded-md text-sm transition-colors',
+                  calendarType === 'lunar'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-muted text-muted-foreground'
+                )}
+              >
+                农历
+              </button>
+            </div>
+          </div>
+
+          {/* 农历闰月 */}
+          {calendarType === 'lunar' && (
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">闰月</Label>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setIsLeap(false)}
+                  className={cn(
+                    'px-4 py-1 rounded-md text-sm transition-colors',
+                    !isLeap
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                >
+                  否
+                </button>
+                <button
+                  onClick={() => setIsLeap(true)}
+                  className={cn(
+                    'px-4 py-1 rounded-md text-sm transition-colors',
+                    isLeap
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                >
+                  是
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 出生时间 */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">出生时间 (必填)</Label>
+            <Input
+              type="datetime-local"
+              value={datetime}
+              onChange={(e) => setDatetime(e.target.value)}
+              className="h-9"
+            />
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              {calendarType === 'lunar' ? '农历' : '公历'} {datetime.replace('T', ' ')}
+            </p>
+          </div>
+
+          {/* 保存 + 排盘按钮 */}
+          <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-2">
               <Switch checked={saveToDb} onCheckedChange={setSaveToDb} id="save-db" />
               <Label htmlFor="save-db" className="text-xs cursor-pointer">
-                自动入库 (供他人查询参考)
+                保存入库
               </Label>
             </div>
             <Button
@@ -170,7 +222,7 @@ export function BaziCalculator() {
               disabled={loading}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : '排八字'}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : '开始排盘'}
             </Button>
           </div>
         </CardContent>

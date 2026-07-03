@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { calculateBazi } from '@/lib/bazi/engine'
+import { calculateBazi, calculateBaziFromLunar } from '@/lib/bazi/engine'
 import { createBaziRecord, isGithubConfigured } from '@/lib/github-db'
 
 // 排八字并自动入库
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { year, month, day, hour, minute, gender, name, saveToDb = true } = body
+    const { year, month, day, hour, minute, gender, name, saveToDb = true, calendarType = 'solar', isLeap = false } = body
 
     if (!year || !month || !day || hour === undefined || !gender) {
       return NextResponse.json(
@@ -15,8 +15,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 计算八字
-    const result = calculateBazi(year, month, day, hour, minute || 0, gender)
+    // 根据历法类型计算八字
+    const result = calendarType === 'lunar'
+      ? calculateBaziFromLunar(year, month, day, hour, minute || 0, isLeap, gender)
+      : calculateBazi(year, month, day, hour, minute || 0, gender)
 
     // 自动入库
     let recordId = null

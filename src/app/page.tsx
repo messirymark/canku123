@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BaziCalculator } from '@/components/bazi/BaziCalculator'
 import { BaziSearch } from '@/components/bazi/BaziSearch'
-import { AdminPanel } from '@/components/bazi/AdminPanel'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('calculate')
@@ -31,15 +30,12 @@ export default function Home() {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-4 max-w-5xl">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4 bg-amber-100/50 dark:bg-zinc-800/50">
+          <TabsList className="grid w-full grid-cols-2 mb-4 bg-amber-100/50 dark:bg-zinc-800/50">
             <TabsTrigger value="calculate" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white">
               排盘
             </TabsTrigger>
             <TabsTrigger value="search" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white">
               查询
-            </TabsTrigger>
-            <TabsTrigger value="admin" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white">
-              管理
             </TabsTrigger>
           </TabsList>
 
@@ -49,10 +45,6 @@ export default function Home() {
 
           <TabsContent value="search" className="mt-0">
             <BaziSearch />
-          </TabsContent>
-
-          <TabsContent value="admin" className="mt-0">
-            <AdminPanel />
           </TabsContent>
         </Tabs>
       </main>

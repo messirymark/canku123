@@ -1275,6 +1275,33 @@
       ],
       "createdAt": "2026-07-03T07:41:54.896Z",
       "updatedAt": "2026-07-03T07:41:54.896Z"
+    },
+    {
+      "id": "mr7t4x2x9w1arft",
+      "name": null,
+      "gender": "male",
+      "birthDate": "未知",
+      "birthTime": "未知",
+      "birthHour": 4,
+      "yearGan": "乙",
+      "yearZhi": "卯",
+      "monthGan": "庚",
+      "monthZhi": "辰",
+      "dayGan": "癸",
+      "dayZhi": "巳",
+      "hourGan": "丙",
+      "hourZhi": "辰",
+      "dayMaster": "癸",
+      "forward": true,
+      "startAge": 0,
+      "startYear": 0,
+      "elementCounts": "{\"金\":1,\"木\":2,\"水\":1,\"火\":2,\"土\":2}",
+      "isPublic": true,
+      "notes": null,
+      "isManual": true,
+      "daYuns": [],
+      "createdAt": "2026-07-05T13:08:54.777Z",
+      "updatedAt": "2026-07-05T13:08:54.777Z"
     }
   ],
   "lifeEvents": [

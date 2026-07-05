@@ -340,4 +340,144 @@ export function getShichenName(hour: number): string {
   return SHICHEN[getBirthHourIndex(hour)]
 }
 
+// ============ 手动录入：从四柱构建八字 ============
+
+// 60甲子纳音表
+const NAYIN_TABLE: Record<string, string> = {
+  '甲子': '海中金', '乙丑': '海中金', '丙寅': '炉中火', '丁卯': '炉中火',
+  '戊辰': '大林木', '己巳': '大林木', '庚午': '路旁土', '辛未': '路旁土',
+  '壬申': '剑锋金', '癸酉': '剑锋金', '甲戌': '山头火', '乙亥': '山头火',
+  '丙子': '涧下水', '丁丑': '涧下水', '戊寅': '城头土', '己卯': '城头土',
+  '庚辰': '白蜡金', '辛巳': '白蜡金', '壬午': '杨柳木', '癸未': '杨柳木',
+  '甲申': '泉中水', '乙酉': '泉中水', '丙戌': '屋上土', '丁亥': '屋上土',
+  '戊子': '霹雳火', '己丑': '霹雳火', '庚寅': '松柏木', '辛卯': '松柏木',
+  '壬辰': '长流水', '癸巳': '长流水', '甲午': '沙中金', '乙未': '沙中金',
+  '丙申': '山下火', '丁酉': '山下火', '戊戌': '平地木', '己亥': '平地木',
+  '庚子': '壁上土', '辛丑': '壁上土', '壬寅': '金箔金', '癸卯': '金箔金',
+  '甲辰': '覆灯火', '乙巳': '覆灯火', '丙午': '天河水', '丁未': '天河水',
+  '戊申': '大驿土', '己酉': '大驿土', '庚戌': '钗钏金', '辛亥': '钗钏金',
+  '壬子': '桑柘木', '癸丑': '桑柘木', '甲寅': '大溪水', '乙卯': '大溪水',
+  '丙辰': '沙中土', '丁巳': '沙中土', '戊午': '天上火', '己未': '天上火',
+  '庚申': '石榴木', '辛酉': '石榴木', '壬戌': '大海水', '癸亥': '大海水',
+}
+
+// 地支藏干
+const ZHI_HIDE_GAN: Record<string, string[]> = {
+  '子': ['癸'], '丑': ['己', '辛', '癸'], '寅': ['甲', '丙', '戊'],
+  '卯': ['乙'], '辰': ['戊', '乙', '癸'], '巳': ['丙', '庚', '戊'],
+  '午': ['丁', '己'], '未': ['己', '丁', '乙'], '申': ['庚', '壬', '戊'],
+  '酉': ['辛'], '戌': ['戊', '辛', '丁'], '亥': ['壬', '甲'],
+}
+
+// 十二长生
+const DI_SHI_STAGES = ['长生', '沐浴', '冠带', '临官', '帝旺', '衰', '病', '死', '墓', '绝', '胎', '养']
+
+// 五行长生位（地支索引）— 阴阳同生同死，均顺行
+const CHANG_SHENG_ZHI: Record<string, number> = {
+  '木': 11, // 亥
+  '火': 2,  // 寅
+  '土': 2,  // 寅（同火）
+  '金': 5,  // 巳
+  '水': 8,  // 申
+}
+
+// 旬名
+const XUN_NAMES = ['甲子', '甲戌', '甲申', '甲午', '甲辰', '甲寅']
+
+// 计算甲子序号 (0-59)
+function getJiaZiIndex(gan: string, zhi: string): number {
+  const ganIdx = TIANGAN.indexOf(gan)
+  const zhiIdx = DIZHI.indexOf(zhi)
+  return (ganIdx * 6 - zhiIdx * 5 + 60) % 60
+}
+
+// 计算旬空
+function getXunKong(gan: string, zhi: string): { xun: string; xunKong: string[] } {
+  const idx = getJiaZiIndex(gan, zhi)
+  const xunIdx = Math.floor(idx / 10)
+  const kongStart = (10 - xunIdx * 2 + 12) % 12
+  return {
+    xun: XUN_NAMES[xunIdx],
+    xunKong: [DIZHI[kongStart], DIZHI[(kongStart + 1) % 12]],
+  }
+}
+
+// 计算地势（十二长生）
+function getDiShi(dayGan: string, zhi: string): string {
+  const element = GAN_WUXING[dayGan]
+  const changShengIdx = CHANG_SHENG_ZHI[element]
+  const zhiIdx = DIZHI.indexOf(zhi)
+  const stageIdx = (zhiIdx - changShengIdx + 12) % 12
+  return DI_SHI_STAGES[stageIdx]
+}
+
+function buildPillarFromGanZhi(gan: string, zhi: string, dayGan: string, isDayMaster = false): Pillar {
+  const { xun, xunKong } = getXunKong(gan, zhi)
+  return {
+    gan,
+    zhi,
+    ganZhi: gan + zhi,
+    ganWuxing: GAN_WUXING[gan] || '',
+    zhiWuxing: ZHI_WUXING[zhi] || '',
+    ganShiShen: isDayMaster ? '日主' : getShiShen(dayGan, gan),
+    zhiShiShenZhi: '',
+    zhiHideGan: ZHI_HIDE_GAN[zhi] || [],
+    naYin: NAYIN_TABLE[gan + zhi] || '',
+    xun,
+    xunKong,
+    diShi: getDiShi(dayGan, zhi),
+  }
+}
+
+/**
+ * 从四柱天干地支直接构建八字（用于古人手动录入）
+ * 不含大运流年（需精确出生时间才能计算）
+ */
+export function calculateBaziFromPillars(
+  yearGan: string, yearZhi: string,
+  monthGan: string, monthZhi: string,
+  dayGan: string, dayZhi: string,
+  hourGan: string, hourZhi: string,
+  gender: 'male' | 'female',
+  options: { name?: string; birthYear?: number; notes?: string } = {}
+): BaziResult {
+  const yearPillar = buildPillarFromGanZhi(yearGan, yearZhi, dayGan)
+  const monthPillar = buildPillarFromGanZhi(monthGan, monthZhi, dayGan)
+  const dayPillar = buildPillarFromGanZhi(dayGan, dayZhi, dayGan, true)
+  const hourPillar = buildPillarFromGanZhi(hourGan, hourZhi, dayGan)
+
+  const result: BaziResult = {
+    birthDate: options.birthYear ? `${options.birthYear}-00-00` : '未知',
+    birthTime: '未知',
+    gender,
+    birthHourZhi: hourZhi,
+
+    yearPillar,
+    monthPillar,
+    dayPillar,
+    hourPillar,
+
+    dayMaster: dayGan,
+    dayMasterWuxing: GAN_WUXING[dayGan] || '',
+
+    forward: true,
+    startAge: 0,
+    startYear: options.birthYear || 0,
+    daYun: [],
+
+    elementCounts: { '金': 0, '木': 0, '水': 0, '火': 0, '土': 0 },
+
+    jieQi: '',
+    lunarDate: options.notes || '手动录入',
+    solarTerm: '',
+
+    taiYuan: '',
+    mingGong: '',
+    shenGong: '',
+  }
+
+  result.elementCounts = countElements(result)
+  return result
+}
+
 export { GAN_WUXING, ZHI_WUXING, GAN_YINYANG, getShiShen }

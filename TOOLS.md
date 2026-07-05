@@ -37,3 +37,9 @@
 - `setSect(1)` = 子时换日柱（23:00后换下一日柱）
 - 节气换月令是默认行为，无需额外配置
 - `EightChar.getYun(1)` 参数: 1=男, 0=女
+- 农历输入: `Lunar.fromYmdHms(year, isLeap ? -month : month, day, ...)` → `.getSolar()` 转 Solar，再排八字
+- 需同时 import `{ Solar, Lunar }` from 'lunar-typescript'
+
+**Vercel 部署**
+- push 后 1-2 分钟自动部署完成
+- push 被拒绝时先 `git pull origin main --no-rebase` 再 push

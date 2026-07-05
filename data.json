@@ -1302,6 +1302,33 @@
       "daYuns": [],
       "createdAt": "2026-07-05T13:08:54.777Z",
       "updatedAt": "2026-07-05T13:08:54.777Z"
+    },
+    {
+      "id": "mr7v9txp0w7kwuz",
+      "name": "苏轼",
+      "gender": "male",
+      "birthDate": "未知",
+      "birthTime": "未知",
+      "birthHour": 4,
+      "yearGan": "戊",
+      "yearZhi": "午",
+      "monthGan": "丁",
+      "monthZhi": "巳",
+      "dayGan": "壬",
+      "dayZhi": "辰",
+      "hourGan": "甲",
+      "hourZhi": "辰",
+      "dayMaster": "壬",
+      "forward": true,
+      "startAge": 0,
+      "startYear": 0,
+      "elementCounts": "{\"金\":0,\"木\":1,\"水\":1,\"火\":3,\"土\":3}",
+      "isPublic": true,
+      "notes": "北宋，文豪",
+      "isManual": true,
+      "daYuns": [],
+      "createdAt": "2026-07-05T14:08:43.213Z",
+      "updatedAt": "2026-07-05T14:08:43.213Z"
     }
   ],
   "lifeEvents": [

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
-import { Loader2, Search, Eye, Calendar, User } from 'lucide-react'
+import { Loader2, Search, Eye, Calendar, User, Pencil, Save, X } from 'lucide-react'
 
 const TIANGAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸']
 const DIZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
@@ -47,6 +47,11 @@ export function BaziSearch() {
   const [searched, setSearched] = useState(false)
   const [detailRecord, setDetailRecord] = useState<any>(null)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editNotes, setEditNotes] = useState('')
+  const [editBirthYear, setEditBirthYear] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const handleSearch = useCallback(async () => {
     setLoading(true)
@@ -80,9 +85,59 @@ export function BaziSearch() {
       if (!res.ok) throw new Error('获取详情失败')
       const data = await res.json()
       setDetailRecord(data.record)
+      setEditing(false)
       setDetailOpen(true)
     } catch (error) {
       toast.error((error as Error).message)
+    }
+  }
+
+  const startEdit = () => {
+    if (!detailRecord) return
+    setEditName(detailRecord.name || '')
+    setEditNotes(detailRecord.notes || '')
+    // 从 birthDate 提取年份（格式可能是 "1037-00-00"）
+    const yr = detailRecord.birthDate?.match(/^(\d{4})/)?.[1] || ''
+    setEditBirthYear(yr && yr !== '0' ? yr : '')
+    setEditing(true)
+  }
+
+  const cancelEdit = () => {
+    setEditing(false)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!detailRecord) return
+    setSaving(true)
+    try {
+      const updates: any = {
+        name: editName || null,
+        notes: editNotes || null,
+      }
+      if (editBirthYear) {
+        updates.birthYear = Number(editBirthYear)
+        updates.birthDate = `${editBirthYear}-00-00`
+      }
+
+      const res = await fetch(`/api/bazi/${detailRecord.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || '保存失败')
+      }
+      const data = await res.json()
+      setDetailRecord(data.record)
+      // 同步更新列表中的记录
+      setResults(prev => prev.map(r => r.id === data.record.id ? { ...r, ...data.record } : r))
+      setEditing(false)
+      toast.success('已保存')
+    } catch (error) {
+      toast.error((error as Error).message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -243,12 +298,47 @@ export function BaziSearch() {
       )}
 
       {/* Detail Dialog */}
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+      <Dialog open={detailOpen} onOpenChange={(open) => { setDetailOpen(open); if (!open) setEditing(false) }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle className="text-amber-900 dark:text-amber-100">
-              八字详情 {detailRecord?.name ? `· ${detailRecord.name}` : ''}
-            </DialogTitle>
+            <div className="flex items-center justify-between pr-6">
+              <DialogTitle className="text-amber-900 dark:text-amber-100">
+                {editing ? '编辑信息' : '八字详情'}
+              </DialogTitle>
+              {!editing ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 border-amber-300 text-amber-700"
+                  onClick={startEdit}
+                >
+                  <Pencil className="h-3 w-3" />
+                  修改
+                </Button>
+              ) : (
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7"
+                    onClick={cancelEdit}
+                    disabled={saving}
+                  >
+                    <X className="h-3 w-3" />
+                    取消
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 bg-amber-600 hover:bg-amber-700 text-white"
+                    onClick={handleSaveEdit}
+                    disabled={saving}
+                  >
+                    {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                    保存
+                  </Button>
+                </div>
+              )}
+            </div>
           </DialogHeader>
           {detailRecord && (
             <ScrollArea className="flex-1 pr-4">
@@ -281,20 +371,71 @@ export function BaziSearch() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="p-1.5 rounded bg-amber-50/20 dark:bg-zinc-800/20">
-                    <span className="text-muted-foreground">性别:</span>{' '}
-                    <span className="font-medium">{detailRecord.gender === 'male' ? '男' : '女'}</span>
+                {/* Edit or Display mode */}
+                {editing ? (
+                  <div className="space-y-3 p-3 rounded-lg border border-amber-200/50 dark:border-zinc-700/50 bg-amber-50/20 dark:bg-zinc-800/20">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">姓名</Label>
+                      <Input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="姓名"
+                        className="h-9"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">出生年份 (可选)</Label>
+                      <Input
+                        type="number"
+                        value={editBirthYear}
+                        onChange={(e) => setEditBirthYear(e.target.value)}
+                        placeholder="如：1037"
+                        className="h-9"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">备注</Label>
+                      <Input
+                        value={editNotes}
+                        onChange={(e) => setEditNotes(e.target.value)}
+                        placeholder="备注信息"
+                        className="h-9"
+                      />
+                    </div>
                   </div>
-                  <div className="p-1.5 rounded bg-amber-50/20 dark:bg-zinc-800/20">
-                    <span className="text-muted-foreground">日主:</span>{' '}
-                    <span className="font-medium">{detailRecord.dayMaster}</span>
-                  </div>
-                  <div className="p-1.5 rounded bg-amber-50/20 dark:bg-zinc-800/20">
-                    <span className="text-muted-foreground">起运:</span>{' '}
-                    <span className="font-medium">{detailRecord.startAge}岁</span>
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="p-1.5 rounded bg-amber-50/20 dark:bg-zinc-800/20">
+                        <span className="text-muted-foreground">性别:</span>{' '}
+                        <span className="font-medium">{detailRecord.gender === 'male' ? '男' : '女'}</span>
+                      </div>
+                      <div className="p-1.5 rounded bg-amber-50/20 dark:bg-zinc-800/20">
+                        <span className="text-muted-foreground">日主:</span>{' '}
+                        <span className="font-medium">{detailRecord.dayMaster}</span>
+                      </div>
+                      <div className="p-1.5 rounded bg-amber-50/20 dark:bg-zinc-800/20">
+                        <span className="text-muted-foreground">起运:</span>{' '}
+                        <span className="font-medium">{detailRecord.startAge}岁</span>
+                      </div>
+                    </div>
+
+                    {/* Notes display */}
+                    {(detailRecord.name || detailRecord.notes || (detailRecord.birthDate && detailRecord.birthDate !== '未知')) && (
+                      <div className="p-2 rounded bg-amber-50/20 dark:bg-zinc-800/20 text-xs space-y-1">
+                        {detailRecord.name && (
+                          <div><span className="text-muted-foreground">姓名：</span>{detailRecord.name}</div>
+                        )}
+                        {detailRecord.birthDate && detailRecord.birthDate !== '未知' && (
+                          <div><span className="text-muted-foreground">出生：</span>{detailRecord.birthDate} {detailRecord.birthTime}</div>
+                        )}
+                        {detailRecord.notes && (
+                          <div><span className="text-muted-foreground">备注：</span>{detailRecord.notes}</div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
 
                 {/* Life Events */}
                 <div>

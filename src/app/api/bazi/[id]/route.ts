@@ -24,7 +24,7 @@ export async function GET(
   }
 }
 
-// 更新八字 (管理员)
+// 更新八字记录
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -32,11 +32,7 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const { adminToken, ...updateFields } = body
-
-    if (adminToken !== process.env.ADMIN_TOKEN && adminToken !== 'bazi-admin-2026') {
-      return NextResponse.json({ error: '无管理员权限' }, { status: 403 })
-    }
+    const { ...updateFields } = body
 
     const record = await updateBaziRecord(id, updateFields)
     if (!record) {

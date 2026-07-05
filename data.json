@@ -1302,6 +1302,149 @@
       "daYuns": [],
       "createdAt": "2026-07-05T13:08:54.777Z",
       "updatedAt": "2026-07-05T13:08:54.777Z"
+    },
+    {
+      "id": "mr7v9txp0w7kwuz",
+      "name": "苏轼",
+      "gender": "male",
+      "birthDate": "未知",
+      "birthTime": "未知",
+      "birthHour": 4,
+      "yearGan": "戊",
+      "yearZhi": "午",
+      "monthGan": "丁",
+      "monthZhi": "巳",
+      "dayGan": "壬",
+      "dayZhi": "辰",
+      "hourGan": "甲",
+      "hourZhi": "辰",
+      "dayMaster": "壬",
+      "forward": true,
+      "startAge": 0,
+      "startYear": 0,
+      "elementCounts": "{\"金\":0,\"木\":1,\"水\":1,\"火\":3,\"土\":3}",
+      "isPublic": true,
+      "notes": "北宋，大文豪，苏门三杰之一",
+      "isManual": true,
+      "daYuns": [],
+      "createdAt": "2026-07-05T14:08:43.213Z",
+      "updatedAt": "2026-07-05T14:09:38.605Z"
+    },
+    {
+      "id": "mr7vcqvcaywdkwv",
+      "name": null,
+      "gender": "male",
+      "birthDate": "1966-05-15",
+      "birthTime": "16:33",
+      "birthHour": 8,
+      "yearGan": "丙",
+      "yearZhi": "午",
+      "monthGan": "癸",
+      "monthZhi": "巳",
+      "dayGan": "甲",
+      "dayZhi": "戌",
+      "hourGan": "壬",
+      "hourZhi": "申",
+      "dayMaster": "甲",
+      "forward": true,
+      "startAge": 7,
+      "startYear": 1973,
+      "elementCounts": "{\"金\":1,\"木\":1,\"水\":2,\"火\":3,\"土\":1}",
+      "isPublic": true,
+      "daYuns": [
+        {
+          "index": 0,
+          "startAge": 1,
+          "endAge": 7,
+          "startYear": 1966,
+          "endYear": 1972,
+          "gan": "",
+          "zhi": ""
+        },
+        {
+          "index": 1,
+          "startAge": 8,
+          "endAge": 17,
+          "startYear": 1973,
+          "endYear": 1982,
+          "gan": "甲",
+          "zhi": "午"
+        },
+        {
+          "index": 2,
+          "startAge": 18,
+          "endAge": 27,
+          "startYear": 1983,
+          "endYear": 1992,
+          "gan": "乙",
+          "zhi": "未"
+        },
+        {
+          "index": 3,
+          "startAge": 28,
+          "endAge": 37,
+          "startYear": 1993,
+          "endYear": 2002,
+          "gan": "丙",
+          "zhi": "申"
+        },
+        {
+          "index": 4,
+          "startAge": 38,
+          "endAge": 47,
+          "startYear": 2003,
+          "endYear": 2012,
+          "gan": "丁",
+          "zhi": "酉"
+        },
+        {
+          "index": 5,
+          "startAge": 48,
+          "endAge": 57,
+          "startYear": 2013,
+          "endYear": 2022,
+          "gan": "戊",
+          "zhi": "戌"
+        },
+        {
+          "index": 6,
+          "startAge": 58,
+          "endAge": 67,
+          "startYear": 2023,
+          "endYear": 2032,
+          "gan": "己",
+          "zhi": "亥"
+        },
+        {
+          "index": 7,
+          "startAge": 68,
+          "endAge": 77,
+          "startYear": 2033,
+          "endYear": 2042,
+          "gan": "庚",
+          "zhi": "子"
+        },
+        {
+          "index": 8,
+          "startAge": 78,
+          "endAge": 87,
+          "startYear": 2043,
+          "endYear": 2052,
+          "gan": "辛",
+          "zhi": "丑"
+        },
+        {
+          "index": 9,
+          "startAge": 88,
+          "endAge": 97,
+          "startYear": 2053,
+          "endYear": 2062,
+          "gan": "壬",
+          "zhi": "寅"
+        }
+      ],
+      "createdAt": "2026-07-05T14:10:59.208Z",
+      "updatedAt": "2026-07-05T14:10:59.208Z"
     }
   ],
   "lifeEvents": [

@@ -11,24 +11,21 @@ export async function POST(request: NextRequest) {
     const {
       yearGan, yearZhi, monthGan, monthZhi,
       dayGan, dayZhi, hourGan, hourZhi,
-      gender, name, birthYear, notes, saveToDb = true,
+      gender, name, birthYear, notes, startAge, saveToDb = true,
     } = body
 
-    // 校验
-    const required = { yearGan, yearZhi, monthGan, monthZhi, dayGan, dayZhi, hourGan, hourZhi }
-    for (const [field, val] of Object.entries(required)) {
-      if (!val || !TIANGAN.includes(val) && !DIZHI.includes(val)) {
-        return NextResponse.json({ error: `参数无效: ${field}` }, { status: 400 })
-      }
-    }
-    // 分别校验干和支
+    // 校验四柱
     const ganFields = { yearGan, monthGan, dayGan, hourGan }
     const zhiFields = { yearZhi, monthZhi, dayZhi, hourZhi }
     for (const [field, val] of Object.entries(ganFields)) {
-      if (!TIANGAN.includes(val)) return NextResponse.json({ error: `${field} 不是有效的天干` }, { status: 400 })
+      if (!val || !TIANGAN.includes(val)) {
+        return NextResponse.json({ error: `${field} 不是有效的天干` }, { status: 400 })
+      }
     }
     for (const [field, val] of Object.entries(zhiFields)) {
-      if (!DIZHI.includes(val)) return NextResponse.json({ error: `${field} 不是有效的地支` }, { status: 400 })
+      if (!val || !DIZHI.includes(val)) {
+        return NextResponse.json({ error: `${field} 不是有效的地支` }, { status: 400 })
+      }
     }
 
     if (!gender || !['male', 'female'].includes(gender)) {
@@ -39,7 +36,7 @@ export async function POST(request: NextRequest) {
       yearGan, yearZhi, monthGan, monthZhi,
       dayGan, dayZhi, hourGan, hourZhi,
       gender,
-      { name, birthYear, notes }
+      { name, birthYear, notes, startAge }
     )
 
     // 入库
@@ -56,14 +53,22 @@ export async function POST(request: NextRequest) {
         dayGan, dayZhi,
         hourGan, hourZhi,
         dayMaster: result.dayMaster,
-        forward: true,
-        startAge: 0,
+        forward: result.forward,
+        startAge: result.startAge,
         startYear: birthYear || 0,
         elementCounts: JSON.stringify(result.elementCounts),
         isPublic: true,
         notes: notes || null,
         isManual: true,
-        daYuns: [],
+        daYuns: result.daYun.map(dy => ({
+          index: dy.index,
+          startAge: dy.startAge,
+          endAge: dy.endAge,
+          startYear: dy.startYear,
+          endYear: dy.endYear,
+          gan: dy.gan,
+          zhi: dy.zhi,
+        })),
       })
       recordId = record.id
     }

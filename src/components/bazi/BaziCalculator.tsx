@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BaziChart } from './BaziChart'
 import { Timeline } from './Timeline'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const HOURS = [
@@ -32,6 +32,13 @@ const TIANGAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', 
 const DIZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']
 const PILLAR_LABELS = ['年柱', '月柱', '日柱', '时柱'] as const
 
+// 年份范围
+const YEAR_MIN = 1900
+const YEAR_MAX = 2030
+const YEARS = Array.from({ length: YEAR_MAX - YEAR_MIN + 1 }, (_, i) => YEAR_MIN + i)
+const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
+const DAYS = Array.from({ length: 31 }, (_, i) => i + 1)
+
 type CalendarType = 'solar' | 'lunar'
 type InputMode = 'date' | 'pillars'
 
@@ -46,9 +53,12 @@ export function BaziCalculator() {
   const [baziData, setBaziData] = useState<any>(null)
   const [recordId, setRecordId] = useState<string | null>(null)
 
-  // 日期模式
+  // 日期模式 — 拆成年月日时四个下拉
   const [calendarType, setCalendarType] = useState<CalendarType>('solar')
-  const [datetime, setDatetime] = useState('1990-05-15T10:00')
+  const [selYear, setSelYear] = useState(1990)
+  const [selMonth, setSelMonth] = useState(5)
+  const [selDay, setSelDay] = useState(15)
+  const [selHourIdx, setSelHourIdx] = useState(5) // 巳时
   const [isLeap, setIsLeap] = useState(false)
 
   // 四柱模式
@@ -58,16 +68,23 @@ export function BaziCalculator() {
   })
   const [birthYear, setBirthYear] = useState('')
   const [notes, setNotes] = useState('')
+  const [startAge, setStartAge] = useState('1')
+
+  // 根据年月计算当月天数
+  const daysInMonth = useMemo(() => {
+    if (calendarType === 'lunar') return 30 // 农历最多30天
+    const d = new Date(selYear, selMonth, 0)
+    return d.getDate()
+  }, [selYear, selMonth, calendarType])
 
   const handleCalculate = useCallback(async () => {
     setLoading(true)
     try {
       if (inputMode === 'date') {
-        const [datePart, timePart] = datetime.split('T')
-        const [year, month, day] = datePart.split('-').map(Number)
-        const [hour, minute] = (timePart || '00:00').split(':').map(Number)
+        const hour = HOURS[selHourIdx].hour
+        const minute = 0
 
-        if (!year || !month || !day) {
+        if (!selYear || !selMonth || !selDay) {
           toast.error('请选择出生时间')
           setLoading(false)
           return
@@ -78,7 +95,7 @@ export function BaziCalculator() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: name || undefined,
-            gender, year, month, day, hour, minute,
+            gender, year: selYear, month: selMonth, day: selDay, hour, minute,
             saveToDb, calendarType, isLeap,
           }),
         })
@@ -108,6 +125,7 @@ export function BaziCalculator() {
             ...p,
             birthYear: birthYear ? Number(birthYear) : undefined,
             notes: notes || undefined,
+            startAge: Number(startAge) || 1,
             saveToDb,
           }),
         })
@@ -125,10 +143,15 @@ export function BaziCalculator() {
     } finally {
       setLoading(false)
     }
-  }, [inputMode, name, gender, calendarType, datetime, isLeap, saveToDb, pillars, birthYear, notes])
+  }, [inputMode, name, gender, calendarType, selYear, selMonth, selDay, selHourIdx, isLeap, saveToDb, pillars, birthYear, notes, startAge])
 
   const updatePillar = (field: keyof typeof pillars, value: string) => {
     setPillars(prev => ({ ...prev, [field]: value }))
+  }
+
+  // 年份快速调整
+  const shiftYear = (delta: number) => {
+    setSelYear(y => Math.max(YEAR_MIN, Math.min(YEAR_MAX, y + delta)))
   }
 
   return (
@@ -253,19 +276,85 @@ export function BaziCalculator() {
                 </div>
               )}
 
-              {/* 出生时间 */}
+              {/* 年份 — 突出显示，带快速调整 */}
               <div className="space-y-1.5">
-                <Label className="text-xs">出生时间 (必填)</Label>
-                <Input
-                  type="datetime-local"
-                  value={datetime}
-                  onChange={(e) => setDatetime(e.target.value)}
-                  className="h-9"
-                />
-                <p className="text-xs text-amber-600 dark:text-amber-400">
-                  {calendarType === 'lunar' ? '农历' : '公历'} {datetime.replace('T', ' ')}
-                </p>
+                <Label className="text-xs font-medium text-amber-800 dark:text-amber-200">年份</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 border-amber-300 flex-shrink-0"
+                    onClick={() => shiftYear(-1)}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Select value={String(selYear)} onValueChange={(v) => setSelYear(Number(v))}>
+                    <SelectTrigger className="h-10 flex-1 text-center text-lg font-bold text-amber-900 dark:text-amber-100 border-amber-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {YEARS.map(y => (
+                        <SelectItem key={y} value={String(y)}>{y}年</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 border-amber-300 flex-shrink-0"
+                    onClick={() => shiftYear(1)}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
+
+              {/* 月日时 — 一行三个 */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">月</Label>
+                  <Select value={String(selMonth)} onValueChange={(v) => setSelMonth(Number(v))}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTHS.map(m => (
+                        <SelectItem key={m} value={String(m)}>{m}月</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">日</Label>
+                  <Select value={String(selDay)} onValueChange={(v) => setSelDay(Number(v))}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS.slice(0, daysInMonth).map(d => (
+                        <SelectItem key={d} value={String(d)}>{d}日</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">时辰</Label>
+                  <Select value={String(selHourIdx)} onValueChange={(v) => setSelHourIdx(Number(v))}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HOURS.map(h => (
+                        <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
+                {calendarType === 'lunar' ? '农历' : '公历'} {selYear}年{selMonth}月{selDay}日 {HOURS[selHourIdx].label}
+              </p>
             </>
           ) : (
             <>
@@ -300,16 +389,28 @@ export function BaziCalculator() {
                 })}
               </div>
 
-              {/* 出生年份（可选） */}
-              <div className="space-y-1.5">
-                <Label className="text-xs">出生年份 (可选，用于标注)</Label>
-                <Input
-                  type="number"
-                  value={birthYear}
-                  onChange={(e) => setBirthYear(e.target.value)}
-                  placeholder="如：1037"
-                  className="h-9"
-                />
+              {/* 起运岁数 + 出生年份 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">起运岁数</Label>
+                  <Input
+                    type="number"
+                    value={startAge}
+                    onChange={(e) => setStartAge(e.target.value)}
+                    placeholder="如：1"
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">出生年份 (可选)</Label>
+                  <Input
+                    type="number"
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    placeholder="如：1037"
+                    className="h-9"
+                  />
+                </div>
               </div>
 
               {/* 备注 */}
@@ -324,7 +425,7 @@ export function BaziCalculator() {
               </div>
 
               <p className="text-xs text-amber-600/80 dark:text-amber-400/60">
-                手动录入不含大运流年（需精确出生时间才能计算）
+                大运按年干阴阳+性别自动排定（阳男阴女顺排，阴男阳女逆排），共10步
               </p>
             </>
           )}

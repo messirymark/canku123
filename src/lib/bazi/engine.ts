@@ -431,7 +431,8 @@ function buildPillarFromGanZhi(gan: string, zhi: string, dayGan: string, isDayMa
 
 /**
  * 从四柱天干地支直接构建八字（用于古人手动录入）
- * 不含大运流年（需精确出生时间才能计算）
+ * @param startAge 起运岁数（手动指定，默认1）
+ * 大运方向：阳男阴女顺排，阴男阳女逆排（与传统规则一致）
  */
 export function calculateBaziFromPillars(
   yearGan: string, yearZhi: string,
@@ -439,12 +440,63 @@ export function calculateBaziFromPillars(
   dayGan: string, dayZhi: string,
   hourGan: string, hourZhi: string,
   gender: 'male' | 'female',
-  options: { name?: string; birthYear?: number; notes?: string } = {}
+  options: { name?: string; birthYear?: number; notes?: string; startAge?: number } = {}
 ): BaziResult {
   const yearPillar = buildPillarFromGanZhi(yearGan, yearZhi, dayGan)
   const monthPillar = buildPillarFromGanZhi(monthGan, monthZhi, dayGan)
   const dayPillar = buildPillarFromGanZhi(dayGan, dayZhi, dayGan, true)
   const hourPillar = buildPillarFromGanZhi(hourGan, hourZhi, dayGan)
+
+  // 大运方向：阳男阴女顺排，阴男阳女逆排
+  const yearGanYinYang = GAN_YINYANG[yearGan]
+  const isYang = yearGanYinYang === '阳'
+  const forward = (gender === 'male' && isYang) || (gender === 'female' && !isYang)
+
+  const startAge = options.startAge ?? 1
+  const birthYear = options.birthYear || 0
+
+  // 从月柱推10步大运
+  const monthJiaZiIdx = getJiaZiIndex(monthGan, monthZhi)
+  const daYun: DaYunInfo[] = []
+  for (let i = 0; i < 10; i++) {
+    const idx = forward
+      ? (monthJiaZiIdx + 1 + i) % 60
+      : (monthJiaZiIdx - 1 - i + 600) % 60
+    const gan = TIANGAN[idx % 10]
+    const zhi = DIZHI[idx % 12]
+
+    const dyStartAge = startAge + i * 10
+    const dyEndAge = dyStartAge + 9
+    const dyStartYear = birthYear ? birthYear + dyStartAge : 0
+    const dyEndYear = birthYear ? dyStartYear + 9 : 0
+
+    // 流年（每步大运10年）
+    const liuNian: LiuNianInfo[] = []
+    for (let j = 0; j < 10; j++) {
+      const lnAge = dyStartAge + j
+      const lnYear = birthYear ? birthYear + lnAge : 0
+      const lnIdx = (lnYear > 0 ? getJiaZiIndexByYear(lnYear) : idx + j) % 60
+      liuNian.push({
+        year: lnYear,
+        age: lnAge,
+        gan: TIANGAN[lnIdx % 10],
+        zhi: DIZHI[lnIdx % 12],
+        ganZhi: TIANGAN[lnIdx % 10] + DIZHI[lnIdx % 12],
+      })
+    }
+
+    daYun.push({
+      index: i,
+      startAge: dyStartAge,
+      endAge: dyEndAge,
+      startYear: dyStartYear,
+      endYear: dyEndYear,
+      gan,
+      zhi,
+      ganZhi: gan + zhi,
+      liuNian,
+    })
+  }
 
   const result: BaziResult = {
     birthDate: options.birthYear ? `${options.birthYear}-00-00` : '未知',
@@ -460,10 +512,10 @@ export function calculateBaziFromPillars(
     dayMaster: dayGan,
     dayMasterWuxing: GAN_WUXING[dayGan] || '',
 
-    forward: true,
-    startAge: 0,
-    startYear: options.birthYear || 0,
-    daYun: [],
+    forward,
+    startAge,
+    startYear: birthYear,
+    daYun,
 
     elementCounts: { '金': 0, '木': 0, '水': 0, '火': 0, '土': 0 },
 
@@ -478,6 +530,12 @@ export function calculateBaziFromPillars(
 
   result.elementCounts = countElements(result)
   return result
+}
+
+// 根据公历年份获取该年立春后的甲子序号 (0-59)
+// 年干支的算法：(year - 4) % 60 即为该年的甲子序号
+function getJiaZiIndexByYear(year: number): number {
+  return ((year - 4) % 60 + 60) % 60
 }
 
 export { GAN_WUXING, ZHI_WUXING, GAN_YINYANG, getShiShen }

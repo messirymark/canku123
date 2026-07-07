@@ -114,12 +114,32 @@ export interface LiuNianInfo {
   ganZhi: string
 }
 
+export interface ShenshaResult {
+  name: string
+  position: string  // 在哪柱: 年/月/日/时
+  gan?: string
+  zhi?: string
+}
+
+export interface BranchRelation {
+  type: '六合' | '三合' | '相冲' | '相刑' | '相害' | '自刑'
+  branches: string[]
+  description: string
+  pillars: string[]  // 涉及的柱
+}
+
 export interface BaziResult {
   // 基本信息
   birthDate: string
   birthTime: string
   gender: 'male' | 'female'
   birthHourZhi: string
+
+  // 真太阳时
+  birthplace?: string
+  longitude?: number
+  solarTimeAdjusted?: boolean
+  adjustedTime?: string
 
   // 四柱
   yearPillar: Pillar
@@ -149,6 +169,12 @@ export interface BaziResult {
   taiYuan: string
   mingGong: string
   shenGong: string
+
+  // 神煞
+  shensha: ShenshaResult[]
+
+  // 地支关系
+  branchRelations: BranchRelation[]
 }
 
 function buildPillar(
@@ -192,6 +218,8 @@ function countElements(result: BaziResult): Record<string, number> {
 
 /**
  * 排八字 - 公历输入
+ * @param birthplace 出生地（城市名，用于真太阳时校正）
+ * @param longitude 出生地经度（直接传入，优先于 birthplace）
  */
 export function calculateBazi(
   year: number,
@@ -199,15 +227,40 @@ export function calculateBazi(
   day: number,
   hour: number,
   minute: number,
-  gender: 'male' | 'female'
+  gender: 'male' | 'female',
+  birthplace?: string,
+  longitude?: number
 ): BaziResult {
-  const solar = Solar.fromYmdHms(year, month, day, hour, minute, 0)
-  return calculateFromSolar(solar, gender)
+  let actualHour = hour
+  let actualMinute = minute
+  let solarTimeAdjusted = false
+  let adjustedTime: string | undefined
+
+  // 真太阳时校正
+  const lng = longitude ?? (birthplace ? CITY_LONGITUDES[birthplace]?.longitude : undefined)
+  if (lng !== undefined) {
+    const adjusted = calculateTrueSolarTime(year, month, day, hour, minute, lng)
+    if (adjusted.adjusted) {
+      actualHour = adjusted.hour
+      actualMinute = adjusted.minute
+      solarTimeAdjusted = true
+      adjustedTime = `${String(adjusted.hour).padStart(2, '0')}:${String(adjusted.minute).padStart(2, '0')}`
+    }
+  }
+
+  const solar = Solar.fromYmdHms(year, month, day, actualHour, actualMinute, 0)
+  const result = calculateFromSolar(solar, gender)
+  result.birthplace = birthplace
+  result.longitude = lng
+  result.solarTimeAdjusted = solarTimeAdjusted
+  result.adjustedTime = adjustedTime
+  return result
 }
 
 /**
  * 排八字 - 农历输入
  * @param isLeap 是否闰月
+ * @param birthplace 出生地（城市名，用于真太阳时校正）
  */
 export function calculateBaziFromLunar(
   year: number,
@@ -216,11 +269,20 @@ export function calculateBaziFromLunar(
   hour: number,
   minute: number,
   isLeap: boolean,
-  gender: 'male' | 'female'
+  gender: 'male' | 'female',
+  birthplace?: string,
+  longitude?: number
 ): BaziResult {
   const lunar = Lunar.fromYmdHms(year, isLeap ? -month : month, day, hour, minute, 0)
   const solar = lunar.getSolar()
-  return calculateFromSolar(solar, gender)
+  // 转换为公历后再做真太阳时校正
+  const solarYear = solar.getYear()
+  const solarMonth = solar.getMonth()
+  const solarDay = solar.getDay()
+  const solarHour = solar.getHour()
+  const solarMinute = solar.getMinute()
+
+  return calculateBazi(solarYear, solarMonth, solarDay, solarHour, solarMinute, gender, birthplace, longitude)
 }
 
 /**
@@ -307,9 +369,14 @@ function calculateFromSolar(solar: Solar, gender: 'male' | 'female'): BaziResult
     taiYuan: eightChar.getTaiYuan(),
     mingGong: eightChar.getMingGong(),
     shenGong: eightChar.getShenGong(),
+
+    shensha: [],
+    branchRelations: [],
   }
 
   result.elementCounts = countElements(result)
+  result.shensha = calculateShensha(dayGan, yearPillar.zhi, monthPillar.zhi, dayPillar.zhi, hourPillar.zhi)
+  result.branchRelations = calculateBranchRelations(yearPillar.zhi, monthPillar.zhi, dayPillar.zhi, hourPillar.zhi)
   return result
 }
 
@@ -526,9 +593,14 @@ export function calculateBaziFromPillars(
     taiYuan: '',
     mingGong: '',
     shenGong: '',
+
+    shensha: [],
+    branchRelations: [],
   }
 
   result.elementCounts = countElements(result)
+  result.shensha = calculateShensha(dayGan, yearPillar.zhi, monthPillar.zhi, dayPillar.zhi, hourPillar.zhi)
+  result.branchRelations = calculateBranchRelations(yearPillar.zhi, monthPillar.zhi, dayPillar.zhi, hourPillar.zhi)
   return result
 }
 
@@ -537,5 +609,419 @@ export function calculateBaziFromPillars(
 function getJiaZiIndexByYear(year: number): number {
   return ((year - 4) % 60 + 60) % 60
 }
+
+// ============ 真太阳时校正 ============
+
+// 中国主要城市经度表（按省份/直辖市）
+export const CITY_LONGITUDES: Record<string, { longitude: number; name: string }> = {
+  // 直辖市
+  '北京': { longitude: 116.41, name: '北京' },
+  '上海': { longitude: 121.47, name: '上海' },
+  '天津': { longitude: 117.20, name: '天津' },
+  '重庆': { longitude: 106.55, name: '重庆' },
+  // 华北
+  '石家庄': { longitude: 114.51, name: '石家庄' },
+  '太原': { longitude: 112.55, name: '太原' },
+  '呼和浩特': { longitude: 111.75, name: '呼和浩特' },
+  // 东北
+  '沈阳': { longitude: 123.43, name: '沈阳' },
+  '长春': { longitude: 125.32, name: '长春' },
+  '哈尔滨': { longitude: 126.63, name: '哈尔滨' },
+  // 华东
+  '南京': { longitude: 118.78, name: '南京' },
+  '杭州': { longitude: 120.16, name: '杭州' },
+  '合肥': { longitude: 117.27, name: '合肥' },
+  '福州': { longitude: 119.30, name: '福州' },
+  '南昌': { longitude: 115.89, name: '南昌' },
+  '济南': { longitude: 117.00, name: '济南' },
+  // 华中
+  '郑州': { longitude: 113.65, name: '郑州' },
+  '武汉': { longitude: 114.31, name: '武汉' },
+  '长沙': { longitude: 112.94, name: '长沙' },
+  // 华南
+  '广州': { longitude: 113.27, name: '广州' },
+  '南宁': { longitude: 108.37, name: '南宁' },
+  '海口': { longitude: 110.20, name: '海口' },
+  '深圳': { longitude: 114.06, name: '深圳' },
+  // 西南
+  '成都': { longitude: 104.07, name: '成都' },
+  '贵阳': { longitude: 106.63, name: '贵阳' },
+  '昆明': { longitude: 102.83, name: '昆明' },
+  '拉萨': { longitude: 91.11, name: '拉萨' },
+  // 西北
+  '西安': { longitude: 108.95, name: '西安' },
+  '兰州': { longitude: 103.83, name: '兰州' },
+  '西宁': { longitude: 101.78, name: '西宁' },
+  '银川': { longitude: 106.23, name: '银川' },
+  '乌鲁木齐': { longitude: 87.62, name: '乌鲁木齐' },
+  // 港澳台
+  '香港': { longitude: 114.17, name: '香港' },
+  '澳门': { longitude: 113.55, name: '澳门' },
+  '台北': { longitude: 121.55, name: '台北' },
+}
+
+// 中国夏令时实施年份 (1986-1991)
+const DST_YEARS = [1986, 1987, 1988, 1989, 1990, 1991]
+
+/**
+ * 计算真太阳时
+ * @param year 年
+ * @param month 月
+ * @param day 日
+ * @param hour 时（北京时间）
+ * @param minute 分
+ * @param longitude 出生地经度
+ * @returns 校正后的时分
+ */
+export function calculateTrueSolarTime(
+  year: number, month: number, day: number,
+  hour: number, minute: number, longitude: number
+): { hour: number; minute: number; adjusted: boolean } {
+  // 1. 夏令时回拨（1986-1991年中国实行夏令时，拨快1小时）
+  let adjustedHour = hour
+  let adjustedMinute = minute
+  if (DST_YEARS.includes(year)) {
+    // 夏令时期间（5月第二个周日至9月第三个周日，简化为5-9月）
+    if (month >= 5 && month <= 9) {
+      adjustedHour = hour - 1
+      if (adjustedHour < 0) {
+        adjustedHour = 23
+        // 日期往前一天（简化处理，不影响排盘因为lunar-typescript会处理）
+      }
+    }
+  }
+
+  // 2. 经度校正：真太阳时 = 北京时间 + (经度 - 120) × 4分钟
+  const standardMeridian = 120 // 北京时间对应的东八区中央经线
+  const longitudeDiff = longitude - standardMeridian
+  const longitudeCorrectionMinutes = longitudeDiff * 4 // 每度差4分钟
+
+  // 3. 均时差（Equation of Time）
+  // B = 2π * (N - 81) / 365, N = day of year
+  const N = getDayOfYear(year, month, day)
+  const B = 2 * Math.PI * (N - 81) / 365
+  const eotMinutes = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B)
+
+  // 总校正分钟数
+  const totalCorrection = longitudeCorrectionMinutes + eotMinutes
+
+  // 校正后的时间
+  let totalMinutes = adjustedHour * 60 + adjustedMinute + totalCorrection
+  // 归一化到 0-1439
+  totalMinutes = ((totalMinutes % 1440) + 1440) % 1440
+
+  return {
+    hour: Math.floor(totalMinutes / 60),
+    minute: Math.round(totalMinutes % 60),
+    adjusted: Math.abs(totalCorrection) >= 1,
+  }
+}
+
+function getDayOfYear(year: number, month: number, day: number): number {
+  const date = new Date(year, month - 1, day)
+  const start = new Date(year, 0, 1)
+  const diff = date.getTime() - start.getTime()
+  return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1
+}
+
+
+// ============ 神煞计算 ============
+
+// 天乙贵人：以日干查地支
+const TIANYI_GUIREN: Record<string, string[]> = {
+  '甲': ['丑', '未'], '戊': ['丑', '未'], '庚': ['丑', '未'],
+  '乙': ['子', '申'], '己': ['子', '申'],
+  '丙': ['亥', '酉'], '丁': ['亥', '酉'],
+  '壬': ['卯', '巳'], '癸': ['卯', '巳'],
+  '辛': ['寅', '午'],
+}
+
+// 文昌：以日干查地支
+const WENCHANG: Record<string, string> = {
+  '甲': '巳', '乙': '午', '丙': '申', '戊': '申',
+  '丁': '酉', '己': '酉', '庚': '亥', '辛': '子',
+  '壬': '寅', '癸': '卯',
+}
+
+// 羊刃：以日干查地支
+const YANGREN: Record<string, string> = {
+  '甲': '卯', '乙': '寅', '丙': '午', '戊': '午',
+  '丁': '巳', '己': '巳', '庚': '酉', '辛': '申',
+  '壬': '子', '癸': '亥',
+}
+
+// 桃花/驿马/华盖：以年支（三合局）查
+const SANHE_GROUPS: Record<string, string> = {
+  '寅': '火', '午': '火', '戌': '火',
+  '申': '水', '子': '水', '辰': '水',
+  '巳': '金', '酉': '金', '丑': '金',
+  '亥': '木', '卯': '木', '未': '木',
+}
+
+const TAOHUA: Record<string, string> = {
+  '火': '卯', '水': '酉', '金': '午', '木': '子',
+}
+
+const YIMA: Record<string, string> = {
+  '火': '申', '水': '寅', '金': '亥', '木': '巳',
+}
+
+const HUAGAI: Record<string, string> = {
+  '火': '戌', '水': '辰', '金': '丑', '木': '未',
+}
+
+// 太极贵人：以日干查地支
+const TAIJI_GUIREN: Record<string, string[]> = {
+  '甲': ['子', '午'], '乙': ['子', '午'],
+  '丙': ['卯', '酉'], '丁': ['卯', '酉'],
+  '戊': ['辰', '戌', '丑', '未'], '己': ['辰', '戌', '丑', '未'],
+  '庚': ['寅', '亥'], '辛': ['寅', '亥'],
+  '壬': ['巳', '申'], '癸': ['巳', '申'],
+}
+
+// 将星：以年支三合局查
+const JIANGXING: Record<string, string> = {
+  '火': '午', '水': '子', '金': '酉', '木': '卯',
+}
+
+function calculateShensha(
+  dayGan: string,
+  yearZhi: string, monthZhi: string, dayZhi: string, hourZhi: string
+): ShenshaResult[] {
+  const results: ShenshaResult[] = []
+  const pillars: Array<{ label: string; zhi: string }> = [
+    { label: '年', zhi: yearZhi },
+    { label: '月', zhi: monthZhi },
+    { label: '日', zhi: dayZhi },
+    { label: '时', zhi: hourZhi },
+  ]
+
+  const allZhi = [yearZhi, monthZhi, dayZhi, hourZhi]
+  const sanheGroup = SANHE_GROUPS[yearZhi] || ''
+
+  // 天乙贵人（查日干，看四柱地支）
+  const tianyi = TIANYI_GUIREN[dayGan] || []
+  for (const p of pillars) {
+    if (tianyi.includes(p.zhi)) {
+      results.push({ name: '天乙贵人', position: p.label + '支', zhi: p.zhi })
+    }
+  }
+
+  // 文昌（查日干）
+  const wenchang = WENCHANG[dayGan]
+  if (wenchang) {
+    for (const p of pillars) {
+      if (p.zhi === wenchang) {
+        results.push({ name: '文昌', position: p.label + '支', zhi: p.zhi })
+      }
+    }
+  }
+
+  // 羊刃（查日干）
+  const yangren = YANGREN[dayGan]
+  if (yangren) {
+    for (const p of pillars) {
+      if (p.zhi === yangren) {
+        results.push({ name: '羊刃', position: p.label + '支', zhi: p.zhi })
+      }
+    }
+  }
+
+  // 太极贵人（查日干）
+  const taiji = TAIJI_GUIREN[dayGan] || []
+  for (const p of pillars) {
+    if (taiji.includes(p.zhi)) {
+      results.push({ name: '太极贵人', position: p.label + '支', zhi: p.zhi })
+    }
+  }
+
+  // 桃花（查年支三合局）
+  const taohua = TAOHUA[sanheGroup]
+  if (taohua) {
+    for (const p of pillars) {
+      if (p.zhi === taohua && p.label !== '年') {
+        results.push({ name: '桃花', position: p.label + '支', zhi: p.zhi })
+      }
+    }
+  }
+
+  // 驿马（查年支三合局）
+  const yima = YIMA[sanheGroup]
+  if (yima) {
+    for (const p of pillars) {
+      if (p.zhi === yima && p.label !== '年') {
+        results.push({ name: '驿马', position: p.label + '支', zhi: p.zhi })
+      }
+    }
+  }
+
+  // 华盖（查年支三合局）
+  const huagai = HUAGAI[sanheGroup]
+  if (huagai) {
+    for (const p of pillars) {
+      if (p.zhi === huagai) {
+        results.push({ name: '华盖', position: p.label + '支', zhi: p.zhi })
+      }
+    }
+  }
+
+  // 将星（查年支三合局）
+  const jiangxing = JIANGXING[sanheGroup]
+  if (jiangxing) {
+    for (const p of pillars) {
+      if (p.zhi === jiangxing && p.label !== '年') {
+        results.push({ name: '将星', position: p.label + '支', zhi: p.zhi })
+      }
+    }
+  }
+
+  return results
+}
+
+
+// ============ 地支关系计算 ============
+
+// 六合
+const LIUHE: Record<string, string> = {
+  '子': '丑', '丑': '子', '寅': '亥', '亥': '寅',
+  '卯': '戌', '戌': '卯', '辰': '酉', '酉': '辰',
+  '巳': '申', '申': '巳', '午': '未', '未': '午',
+}
+
+// 三合局
+const SANHE_JU: Array<{ branches: string[]; element: string }> = [
+  { branches: ['申', '子', '辰'], element: '水' },
+  { branches: ['寅', '午', '戌'], element: '火' },
+  { branches: ['巳', '酉', '丑'], element: '金' },
+  { branches: ['亥', '卯', '未'], element: '木' },
+]
+
+// 相冲
+const CHONG: Record<string, string> = {
+  '子': '午', '午': '子', '丑': '未', '未': '丑',
+  '寅': '申', '申': '寅', '卯': '酉', '酉': '卯',
+  '辰': '戌', '戌': '辰', '巳': '亥', '亥': '巳',
+}
+
+// 相刑
+const XING: Array<{ pair: [string, string]; name: string }> = [
+  { pair: ['寅', '巳'], name: '无恩之刑' },
+  { pair: ['巳', '申'], name: '无恩之刑' },
+  { pair: ['寅', '申'], name: '无恩之刑' },
+  { pair: ['丑', '戌'], name: '恃势之刑' },
+  { pair: ['戌', '未'], name: '恃势之刑' },
+  { pair: ['丑', '未'], name: '恃势之刑' },
+  { pair: ['子', '卯'], name: '无礼之刑' },
+]
+
+// 自刑
+const ZIXING = ['辰', '午', '酉', '亥']
+
+// 相害
+const HAI: Record<string, string> = {
+  '子': '未', '未': '子', '丑': '午', '午': '丑',
+  '寅': '巳', '巳': '寅', '卯': '辰', '辰': '卯',
+  '申': '亥', '亥': '申', '酉': '戌', '戌': '酉',
+}
+
+function calculateBranchRelations(
+  yearZhi: string, monthZhi: string, dayZhi: string, hourZhi: string
+): BranchRelation[] {
+  const results: BranchRelation[] = []
+  const pillars: Array<{ label: string; zhi: string }> = [
+    { label: '年', zhi: yearZhi },
+    { label: '月', zhi: monthZhi },
+    { label: '日', zhi: dayZhi },
+    { label: '时', zhi: hourZhi },
+  ]
+
+  // 检查所有两两组合
+  for (let i = 0; i < pillars.length; i++) {
+    for (let j = i + 1; j < pillars.length; j++) {
+      const a = pillars[i]
+      const b = pillars[j]
+
+      // 六合
+      if (LIUHE[a.zhi] === b.zhi) {
+        results.push({
+          type: '六合',
+          branches: [a.zhi, b.zhi],
+          description: `${a.label}${a.zhi}与${b.label}${b.zhi}六合`,
+          pillars: [a.label, b.label],
+        })
+      }
+
+      // 相冲
+      if (CHONG[a.zhi] === b.zhi) {
+        results.push({
+          type: '相冲',
+          branches: [a.zhi, b.zhi],
+          description: `${a.label}${a.zhi}与${b.label}${b.zhi}相冲`,
+          pillars: [a.label, b.label],
+        })
+      }
+
+      // 相刑
+      for (const xing of XING) {
+        if ((xing.pair[0] === a.zhi && xing.pair[1] === b.zhi) ||
+            (xing.pair[0] === b.zhi && xing.pair[1] === a.zhi)) {
+          results.push({
+            type: '相刑',
+            branches: [a.zhi, b.zhi],
+            description: `${a.label}${a.zhi}与${b.label}${b.zhi}相刑（${xing.name}）`,
+            pillars: [a.label, b.label],
+          })
+          break
+        }
+      }
+
+      // 相害
+      if (HAI[a.zhi] === b.zhi) {
+        results.push({
+          type: '相害',
+          branches: [a.zhi, b.zhi],
+          description: `${a.label}${a.zhi}与${b.label}${b.zhi}相害`,
+          pillars: [a.label, b.label],
+        })
+      }
+    }
+  }
+
+  // 三合：检查四柱中是否凑齐三合局中的三个
+  const zhiList = pillars.map(p => ({ ...p, zhiSet: p.zhi }))
+  for (const ju of SANHE_JU) {
+    const matched = pillars.filter(p => ju.branches.includes(p.zhi))
+    if (matched.length >= 2) {
+      // 至少两支同属一个三合局
+      const isFull = matched.length >= 3
+      results.push({
+        type: '三合',
+        branches: matched.map(m => m.zhi),
+        description: isFull
+          ? `${matched.map(m => m.label + m.zhi).join('、')}三合${ju.element}局`
+          : `${matched.map(m => m.label + m.zhi).join('、')}半三合${ju.element}局`,
+        pillars: matched.map(m => m.label),
+      })
+    }
+  }
+
+  // 自刑：同一地支出现多次
+  for (const zhi of ZIXING) {
+    const matched = pillars.filter(p => p.zhi === zhi)
+    if (matched.length >= 2) {
+      results.push({
+        type: '自刑',
+        branches: [zhi],
+        description: `${matched.map(m => m.label + m.zhi).join('、')}自刑`,
+        pillars: matched.map(m => m.label),
+      })
+    }
+  }
+
+  return results
+}
+
+
+// ============ 导出辅助函数 ============
 
 export { GAN_WUXING, ZHI_WUXING, GAN_YINYANG, getShiShen }

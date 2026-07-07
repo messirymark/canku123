@@ -10,8 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BaziChart } from './BaziChart'
 import { Timeline } from './Timeline'
 import { toast } from 'sonner'
-import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Loader2, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CITY_LONGITUDES } from '@/lib/bazi/engine'
+
+// 城市列表
+const CITIES = Object.keys(CITY_LONGITUDES).sort()
 
 const HOURS = [
   { value: '0', label: '子时 23:00-01:00', hour: 23 },
@@ -60,6 +64,7 @@ export function BaziCalculator() {
   const [selDay, setSelDay] = useState(15)
   const [selHourIdx, setSelHourIdx] = useState(5) // 巳时
   const [isLeap, setIsLeap] = useState(false)
+  const [birthplace, setBirthplace] = useState<string>('')
 
   // 四柱模式
   const [pillars, setPillars] = useState({
@@ -97,6 +102,7 @@ export function BaziCalculator() {
             name: name || undefined,
             gender, year: selYear, month: selMonth, day: selDay, hour, minute,
             saveToDb, calendarType, isLeap,
+            birthplace: birthplace || undefined,
           }),
         })
         if (!response.ok) {
@@ -143,7 +149,7 @@ export function BaziCalculator() {
     } finally {
       setLoading(false)
     }
-  }, [inputMode, name, gender, calendarType, selYear, selMonth, selDay, selHourIdx, isLeap, saveToDb, pillars, birthYear, notes, startAge])
+  }, [inputMode, name, gender, calendarType, selYear, selMonth, selDay, selHourIdx, isLeap, saveToDb, pillars, birthYear, notes, startAge, birthplace])
 
   const updatePillar = (field: keyof typeof pillars, value: string) => {
     setPillars(prev => ({ ...prev, [field]: value }))
@@ -355,6 +361,24 @@ export function BaziCalculator() {
               <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
                 {calendarType === 'lunar' ? '农历' : '公历'} {selYear}年{selMonth}月{selDay}日 {HOURS[selHourIdx].label}
               </p>
+
+              {/* 出生地（真太阳时校正） */}
+              <div className="space-y-1.5">
+                <Label className="text-xs flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  出生地 <span className="text-muted-foreground">（真太阳时校正，可选）</span>
+                </Label>
+                <Select value={birthplace} onValueChange={setBirthplace}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="选择出生城市（不选则用北京时间）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CITIES.map(c => (
+                      <SelectItem key={c} value={c}>{c}（东经{CITY_LONGITUDES[c].longitude}°）</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </>
           ) : (
             <>

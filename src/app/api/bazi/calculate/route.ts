@@ -6,7 +6,7 @@ import { createBaziRecord, isGithubConfigured } from '@/lib/github-db'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { year, month, day, hour, minute, gender, name, saveToDb = true, calendarType = 'solar', isLeap = false } = body
+    const { year, month, day, hour, minute, gender, name, saveToDb = true, calendarType = 'solar', isLeap = false, birthplace } = body
 
     if (!year || !month || !day || hour === undefined || !gender) {
       return NextResponse.json(
@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 根据历法类型计算八字
+    // 根据历法类型计算八字（支持真太阳时校正）
     const result = calendarType === 'lunar'
-      ? calculateBaziFromLunar(year, month, day, hour, minute || 0, isLeap, gender)
-      : calculateBazi(year, month, day, hour, minute || 0, gender)
+      ? calculateBaziFromLunar(year, month, day, hour, minute || 0, isLeap, gender, birthplace)
+      : calculateBazi(year, month, day, hour, minute || 0, gender, birthplace)
 
     // 自动入库
     let recordId = null

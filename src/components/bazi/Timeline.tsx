@@ -267,16 +267,23 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
 
           {bazi.daYun.map((daYun, dyIdx) => {
             const isChildhood = daYun.ganZhi === '童限' || !daYun.gan
+            const isCurrentDaYun = currentYear >= daYun.startYear && currentYear <= daYun.endYear
             return (
               <div key={dyIdx} className="mb-2">
                 {/* Da Yun Header */}
-                <div className="sticky top-0 z-10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm py-2 border-b border-amber-200/50 dark:border-zinc-700/50">
+                <div className={`sticky top-0 z-10 backdrop-blur-sm py-2 border-b ${
+                  isCurrentDaYun
+                    ? 'bg-amber-100/95 dark:bg-amber-900/30 border-amber-400 dark:border-amber-600'
+                    : 'bg-white/95 dark:bg-zinc-900/95 border-amber-200/50 dark:border-zinc-700/50'
+                }`}>
                   <div className="flex items-center gap-3">
                     {/* Da Yun Pillar */}
                     <div className={`flex items-center justify-center w-14 h-14 rounded-lg border-2 font-bold text-xl flex-shrink-0 ${
                       isChildhood
                         ? 'border-gray-300 bg-gray-50 text-gray-400'
-                        : 'border-amber-400 bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-100'
+                        : isCurrentDaYun
+                          ? 'border-amber-500 bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100 ring-2 ring-amber-400/50'
+                          : 'border-amber-400 bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-100'
                     }`}>
                       {isChildhood ? '童' : (
                         <div className="flex flex-col items-center leading-none">
@@ -288,8 +295,13 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
 
                     {/* Da Yun Info */}
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                      <div className="text-sm font-medium text-amber-900 dark:text-amber-100 flex items-center gap-2">
                         {isChildhood ? '童限' : `第${daYun.index}步大运`} · {daYun.ganZhi}
+                        {isCurrentDaYun && (
+                          <Badge variant="outline" className="text-xs bg-amber-200 text-amber-900 border-amber-400 dark:bg-amber-800/50 dark:text-amber-200 dark:border-amber-600">
+                            当前大运
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {daYun.startAge}岁 - {daYun.endAge}岁 · {daYun.startYear}年 - {daYun.endYear}年

@@ -315,8 +315,8 @@ export function BaziCalculator() {
                 </div>
               </div>
 
-              {/* 月日时 — 一行三个 */}
-              <div className="grid grid-cols-3 gap-2">
+              {/* 月日 — 一行两个 */}
+              <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1.5">
                   <Label className="text-xs">月</Label>
                   <Select value={String(selMonth)} onValueChange={(v) => setSelMonth(Number(v))}>
@@ -343,19 +343,21 @@ export function BaziCalculator() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">时辰</Label>
-                  <Select value={String(selHourIdx)} onValueChange={(v) => setSelHourIdx(Number(v))}>
-                    <SelectTrigger className="h-9 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {HOURS.map(h => (
-                        <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              </div>
+
+              {/* 时辰 — 单独一行，避免手机溢出 */}
+              <div className="space-y-1.5">
+                <Label className="text-xs">时辰</Label>
+                <Select value={String(selHourIdx)} onValueChange={(v) => setSelHourIdx(Number(v))}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HOURS.map(h => (
+                      <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <p className="text-xs text-amber-600 dark:text-amber-400 text-center">

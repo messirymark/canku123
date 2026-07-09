@@ -1795,6 +1795,122 @@
       ],
       "createdAt": "2026-07-05T16:25:01.455Z",
       "updatedAt": "2026-07-05T16:25:01.455Z"
+    },
+    {
+      "id": "mrdjhtbssyxiczi",
+      "name": "欧阳询",
+      "gender": "male",
+      "birthDate": "1990-07-08",
+      "birthTime": "09:00",
+      "birthHour": 5,
+      "yearGan": "庚",
+      "yearZhi": "午",
+      "monthGan": "癸",
+      "monthZhi": "未",
+      "dayGan": "甲",
+      "dayZhi": "戌",
+      "hourGan": "己",
+      "hourZhi": "巳",
+      "dayMaster": "甲",
+      "forward": true,
+      "startAge": 10,
+      "startYear": 2000,
+      "elementCounts": "{\"金\":1,\"木\":1,\"水\":1,\"火\":2,\"土\":3}",
+      "isPublic": true,
+      "daYuns": [
+        {
+          "index": 0,
+          "startAge": 1,
+          "endAge": 10,
+          "startYear": 1990,
+          "endYear": 1999,
+          "gan": "",
+          "zhi": ""
+        },
+        {
+          "index": 1,
+          "startAge": 11,
+          "endAge": 20,
+          "startYear": 2000,
+          "endYear": 2009,
+          "gan": "甲",
+          "zhi": "申"
+        },
+        {
+          "index": 2,
+          "startAge": 21,
+          "endAge": 30,
+          "startYear": 2010,
+          "endYear": 2019,
+          "gan": "乙",
+          "zhi": "酉"
+        },
+        {
+          "index": 3,
+          "startAge": 31,
+          "endAge": 40,
+          "startYear": 2020,
+          "endYear": 2029,
+          "gan": "丙",
+          "zhi": "戌"
+        },
+        {
+          "index": 4,
+          "startAge": 41,
+          "endAge": 50,
+          "startYear": 2030,
+          "endYear": 2039,
+          "gan": "丁",
+          "zhi": "亥"
+        },
+        {
+          "index": 5,
+          "startAge": 51,
+          "endAge": 60,
+          "startYear": 2040,
+          "endYear": 2049,
+          "gan": "戊",
+          "zhi": "子"
+        },
+        {
+          "index": 6,
+          "startAge": 61,
+          "endAge": 70,
+          "startYear": 2050,
+          "endYear": 2059,
+          "gan": "己",
+          "zhi": "丑"
+        },
+        {
+          "index": 7,
+          "startAge": 71,
+          "endAge": 80,
+          "startYear": 2060,
+          "endYear": 2069,
+          "gan": "庚",
+          "zhi": "寅"
+        },
+        {
+          "index": 8,
+          "startAge": 81,
+          "endAge": 90,
+          "startYear": 2070,
+          "endYear": 2079,
+          "gan": "辛",
+          "zhi": "卯"
+        },
+        {
+          "index": 9,
+          "startAge": 91,
+          "endAge": 100,
+          "startYear": 2080,
+          "endYear": 2089,
+          "gan": "壬",
+          "zhi": "辰"
+        }
+      ],
+      "createdAt": "2026-07-09T13:25:37.336Z",
+      "updatedAt": "2026-07-09T13:25:37.336Z"
     }
   ],
   "lifeEvents": [

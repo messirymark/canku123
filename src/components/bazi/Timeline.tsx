@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, ChevronRight, Loader2 } from 'lucide-react'
 
 const WUXING_COLORS: Record<string, string> = {
   '木': 'text-green-600 dark:text-green-400',
@@ -105,6 +105,7 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [expandedDaYuns, setExpandedDaYuns] = useState<Set<number>>(new Set())
 
   // Fetch events
   const fetchEvents = useCallback(async () => {
@@ -205,6 +206,27 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
   const currentYear = new Date().getFullYear()
   const totalYears = bazi.daYun.reduce((sum, dy) => sum + dy.liuNian.length, 0)
 
+  // Toggle DaYun expansion
+  const toggleDaYun = useCallback((idx: number) => {
+    setExpandedDaYuns(prev => {
+      const next = new Set(prev)
+      if (next.has(idx)) {
+        next.delete(idx)
+      } else {
+        next.add(idx)
+      }
+      return next
+    })
+  }, [])
+
+  // Default: expand current DaYun on mount
+  useEffect(() => {
+    const idx = bazi.daYun.findIndex(dy => currentYear >= dy.startYear && currentYear <= dy.endYear)
+    if (idx >= 0) {
+      setExpandedDaYuns(new Set([idx]))
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Card className="border-amber-200/60 dark:border-zinc-700/60">
       <CardHeader className="pb-3">
@@ -268,15 +290,26 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
           {bazi.daYun.map((daYun, dyIdx) => {
             const isChildhood = daYun.ganZhi === '童限' || !daYun.gan
             const isCurrentDaYun = currentYear >= daYun.startYear && currentYear <= daYun.endYear
+            const isExpanded = expandedDaYuns.has(dyIdx)
+            const yearEventsInDaYun = events.filter(e => e.year >= daYun.startYear && e.year <= daYun.endYear)
             return (
               <div key={dyIdx} className="mb-2">
-                {/* Da Yun Header */}
-                <div className={`sticky top-0 z-10 backdrop-blur-sm py-2 border-b ${
-                  isCurrentDaYun
-                    ? 'bg-amber-100/95 dark:bg-amber-900/30 border-amber-400 dark:border-amber-600'
-                    : 'bg-white/95 dark:bg-zinc-900/95 border-amber-200/50 dark:border-zinc-700/50'
-                }`}>
+                {/* Da Yun Header — clickable to toggle */}
+                <div
+                  className={`sticky top-0 z-10 backdrop-blur-sm py-2 border-b cursor-pointer select-none transition-colors ${
+                    isCurrentDaYun
+                      ? 'bg-amber-100/95 dark:bg-amber-900/30 border-amber-400 dark:border-amber-600'
+                      : 'bg-white/95 dark:bg-zinc-900/95 border-amber-200/50 dark:border-zinc-700/50'
+                  } hover:bg-amber-50 dark:hover:bg-zinc-800/95`}
+                  onClick={() => toggleDaYun(dyIdx)}
+                >
                   <div className="flex items-center gap-3">
+                    {/* Expand/Collapse chevron */}
+                    {isExpanded
+                      ? <ChevronDown className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                      : <ChevronRight className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                    }
+
                     {/* Da Yun Pillar */}
                     <div className={`flex items-center justify-center w-14 h-14 rounded-lg border-2 font-bold text-xl flex-shrink-0 ${
                       isChildhood
@@ -302,25 +335,33 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
                             当前大运
                           </Badge>
                         )}
+                        {!isExpanded && yearEventsInDaYun.length > 0 && (
+                          <Badge variant="outline" className="text-xs bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300">
+                            {yearEventsInDaYun.length}条大事
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {daYun.startAge}岁 - {daYun.endAge}岁 · {daYun.startYear}年 - {daYun.endYear}年
                       </div>
                     </div>
 
-                    {/* Add Event Button */}
-                    <AddEventButton
-                      onAdd={() => {
-                        setEditingEvent(null)
-                        setDialogOpen(true)
-                      }}
-                    />
+                    {/* Add Event Button — stopPropagation to not toggle */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <AddEventButton
+                        onAdd={() => {
+                          setEditingEvent(null)
+                          setDialogOpen(true)
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Liu Nian (Yearly) Entries */}
-                <div className="ml-7 border-l-2 border-amber-200/50 dark:border-zinc-700/50">
-                  {daYun.liuNian.map((ln, lnIdx) => {
+                {/* Liu Nian (Yearly) Entries — collapsible */}
+                {isExpanded && (
+                  <div className="ml-7 border-l-2 border-amber-200/50 dark:border-zinc-700/50">
+                    {daYun.liuNian.map((ln, lnIdx) => {
                     const yearEvents = getEventsForYear(ln.year)
                     const hasEvents = yearEvents.length > 0
                     const isCurrentYear = ln.year === currentYear
@@ -433,7 +474,8 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
                       </div>
                     )
                   })}
-                </div>
+                  </div>
+                )}
               </div>
             )
           })}

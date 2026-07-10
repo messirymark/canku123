@@ -217,7 +217,7 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
 
   return (
     <Card className="border-amber-200/60 dark:border-zinc-700/60">
-      <CardHeader className="pb-3">
+      <CardHeader className="sticky top-[60px] z-30 pb-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-t-xl">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base text-amber-900 dark:text-amber-100">
             大运 · 流年 · 人生履历

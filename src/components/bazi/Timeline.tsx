@@ -296,7 +296,7 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
               <div key={dyIdx} className="mb-2">
                 {/* Da Yun Header — clickable to toggle */}
                 <div
-                  className={`sticky top-0 z-10 backdrop-blur-sm py-2 border-b cursor-pointer select-none transition-colors ${
+                  className={`backdrop-blur-sm py-2 border-b cursor-pointer select-none transition-colors ${
                     isCurrentDaYun
                       ? 'bg-amber-100/95 dark:bg-amber-900/30 border-amber-400 dark:border-amber-600'
                       : 'bg-white/95 dark:bg-zinc-900/95 border-amber-200/50 dark:border-zinc-700/50'

@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, ChevronRight, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
 
 const WUXING_COLORS: Record<string, string> = {
   '木': 'text-green-600 dark:text-green-400',
@@ -103,7 +103,6 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
   const [loadingEvents, setLoadingEvents] = useState(false)
   const [editingEvent, setEditingEvent] = useState<LifeEvent | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [expandedDaYuns, setExpandedDaYuns] = useState<Set<number>>(new Set())
 
@@ -128,20 +127,9 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
     fetchEvents()
   }, [fetchEvents])
 
-  // Track scroll progress
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current
-    if (!el) return
-    const max = el.scrollHeight - el.clientHeight
-    const progress = max > 0 ? (el.scrollTop / max) * 100 : 0
-    setScrollProgress(progress)
-  }, [])
-
   // Scroll to specific year
   const scrollToYear = useCallback((year: number) => {
-    const el = scrollRef.current
-    if (!el) return
-    const target = el.querySelector(`[data-year="${year}"]`)
+    const target = document.querySelector(`[data-year="${year}"]`)
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
@@ -238,22 +226,6 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs border-amber-300"
-              onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              <ChevronUp className="h-3 w-3" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs border-amber-300"
-              onClick={() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })}
-            >
-              <ChevronDown className="h-3 w-3" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
               className="h-7 text-xs border-amber-300 hidden sm:flex"
               onClick={() => scrollToYear(currentYear)}
             >
@@ -261,25 +233,16 @@ export function Timeline({ bazi, recordId }: TimelineProps) {
             </Button>
           </div>
         </div>
-        {/* Scroll progress bar */}
-        <div className="h-1 bg-amber-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-amber-500 transition-all duration-150"
-            style={{ width: `${scrollProgress}%` }}
-          />
-        </div>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{birthYear}年 出生</span>
           <span>{totalYears}年 人生履历</span>
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {/* Timeline Scroll Area */}
+        {/* Timeline Area */}
         <div
           ref={scrollRef}
-          onScroll={handleScroll}
-          className="max-h-[800px] overflow-y-auto px-4 pb-4 timeline-scroll hide-scrollbar"
-          style={{ scrollbarWidth: 'thin' }}
+          className="px-4 pb-4"
         >
           {loadingEvents && (
             <div className="flex justify-center py-4">

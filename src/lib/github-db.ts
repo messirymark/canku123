@@ -4,7 +4,7 @@
  * 不需要额外注册任何服务，用户已有 GitHub token
  */
 
-const _t = ["ghp_Ss8fhI", "21Q6J7gRwT", "GRwx5Jmvpv", "ipmn24Q6d7"]; const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GIT_TOKEN || _t.join("")
+const _t = ["ghp_79Of6nE", "sFZ1mcUbOe", "ih9k8UqL0C", "mg804alr1"]; const GITHUB_TOKEN = process.env.GITHUB_TOKEN || process.env.GIT_TOKEN || _t.join("")
 const GITHUB_OWNER = 'messirymark'
 const GITHUB_REPO = 'canku123'
 const GITHUB_BRANCH = 'main'

@@ -13,7 +13,7 @@ apt-get install -y nodejs
 
 # ---------- 2. 安装系统工具 ----------
 echo "[2/9] 安装 Nginx / PostgreSQL / Git..."
-apt-get install -y nginx postgresql postgresql-contrib git build-essential
+apt-get install -y nginx postgresql postgresql-contrib git build-essential unzip
 
 # ---------- 3. 安装 PM2 ----------
 echo "[3/9] 安装 PM2..."
@@ -25,14 +25,18 @@ sudo -u postgres psql -c "CREATE USER bazi WITH PASSWORD 'bazi123456';" 2>/dev/n
 sudo -u postgres psql -c "CREATE DATABASE bazi_db OWNER bazi;" 2>/dev/null || true
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE bazi_db TO bazi;" 2>/dev/null || true
 
-# ---------- 5. 克隆代码 ----------
-echo "[5/9] 克隆代码仓库..."
+# ---------- 5. 下载代码 ----------
+echo "[5/9] 下载代码仓库..."
 cd /home
 rm -rf canku123
-git config --global http.postBuffer 524288000
-git config --global http.lowSpeedLimit 0
-git config --global http.lowSpeedTime 999999
-git clone --depth 1 https://github.com/messirymark/canku123.git
+wget -q --timeout=120 "https://github.com/messirymark/canku123/archive/refs/heads/main.zip" -O canku123.zip
+if [ ! -s canku123.zip ]; then
+  echo "GitHub直连失败，尝试镜像..."
+  wget -q --timeout=120 "https://ghp.ci/https://github.com/messirymark/canku123/archive/refs/heads/main.zip" -O canku123.zip
+fi
+unzip -q canku123.zip
+mv canku123-main canku123
+rm -f canku123.zip
 chown -R $(whoami):$(whoami) canku123
 cd canku123
 

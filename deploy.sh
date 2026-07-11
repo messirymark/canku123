@@ -29,7 +29,10 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE bazi_db TO bazi;" 2>/
 echo "[5/9] 克隆代码仓库..."
 cd /home
 rm -rf canku123
-git clone https://github.com/messirymark/canku123.git
+git config --global http.postBuffer 524288000
+git config --global http.lowSpeedLimit 0
+git config --global http.lowSpeedTime 999999
+git clone --depth 1 https://github.com/messirymark/canku123.git
 chown -R $(whoami):$(whoami) canku123
 cd canku123
 
